@@ -58,7 +58,7 @@ namespace VU1WPF
 
             // Create instance of VU1 server
             string MasterKey = ConfigManager.GetMasterKey();
-            DialServer = new VU1_Server(MasterKey);
+            DialServer = new VU1_Server(ConfigManager.GetServerHost(), ConfigManager.GetServerPort(), MasterKey);
 
             // Initiate sensor manager
             SensorManager = new VU1_SensorManager();
@@ -80,6 +80,11 @@ namespace VU1WPF
 
             RefreshDialList();
             //SetAllDialValue(50);
+
+            // Populate server settings UI
+            txtServerHost.Text = ConfigManager.GetServerHost();
+            txtServerPort.Text = ConfigManager.GetServerPort().ToString();
+            SetConnectionStatus(DialServer.GetDialList().Count > 0);
 
             //Systray icon
             System.Windows.Forms.NotifyIcon notifyIcon;
@@ -404,6 +409,56 @@ namespace VU1WPF
             aboutWindow.Show();
         }
 
+        private void SetConnectionStatus(bool connected)
+        {
+            if (connected)
+            {
+                lblConnectionStatus.Content = $"Connected to {ConfigManager.GetServerHost()}:{ConfigManager.GetServerPort()}";
+                lblConnectionStatus.Foreground = System.Windows.Media.Brushes.Green;
+            }
+            else
+            {
+                lblConnectionStatus.Content = $"Cannot reach {ConfigManager.GetServerHost()}:{ConfigManager.GetServerPort()}";
+                lblConnectionStatus.Foreground = System.Windows.Media.Brushes.Red;
+            }
+        }
+
+        private void btnReconnect_Click(object sender, RoutedEventArgs e)
+        {
+            string host = txtServerHost.Text.Trim();
+            if (string.IsNullOrWhiteSpace(host))
+            {
+                lblConnectionStatus.Content = "Host cannot be empty";
+                lblConnectionStatus.Foreground = System.Windows.Media.Brushes.OrangeRed;
+                return;
+            }
+
+            if (!int.TryParse(txtServerPort.Text, out int port) || port < 1 || port > 65535)
+            {
+                lblConnectionStatus.Content = "Port must be 1–65535";
+                lblConnectionStatus.Foreground = System.Windows.Media.Brushes.OrangeRed;
+                return;
+            }
+
+            lblConnectionStatus.Content = "Connecting...";
+            lblConnectionStatus.Foreground = System.Windows.Media.Brushes.Gray;
+
+            ConfigManager.SetServerHost(host);
+            ConfigManager.SetServerPort(port);
+            ConfigManager.SaveConfigFile();
+
+            string masterKey = ConfigManager.GetMasterKey();
+            DialServer = new VU1_Server(host, port, masterKey);
+
+            bool ok = DialServer.RefreshDialList();
+            SetConnectionStatus(ok);
+
+            if (ok)
+            {
+                RefreshDialList();
+            }
+        }
+
 
         void NumericTextBoxInput(object sender, TextCompositionEventArgs e)
         {
@@ -420,6 +475,15 @@ namespace VU1WPF
                 e.Handled = false;
             }
             else
+            {
+                e.Handled = true;
+            }
+        }
+
+        void IntegerTextBoxInput(object sender, TextCompositionEventArgs e)
+        {
+            // Only allow digits, max 5 characters (port max 65535)
+            if (((System.Windows.Controls.TextBox)sender).Text.Length >= 5 || !Regex.IsMatch(e.Text, @"^[0-9]$"))
             {
                 e.Handled = true;
             }

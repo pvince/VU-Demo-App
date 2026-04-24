@@ -25,6 +25,8 @@ namespace VU1WPF
     {
         public String masterKey { get; set; }
         public float dialUpdatePeriod { get; set; }
+        public String serverHost { get; set; }
+        public int serverPort { get; set; }
 
         public List<ConfigContentsDial> dial_metrics { get; set; }
 

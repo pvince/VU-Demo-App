@@ -18,6 +18,8 @@ namespace KR_VU1_ConfigurationManager
     {
         private float default_update_period = 0.5f;
         private string default_master_key = "cTpAWYuRpA2zx75Yh961Cg";
+        private string default_server_host = "localhost";
+        private int default_server_port = 5340;
         private string pathConfigFile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\KaranovicResearch\VU1-DemoApp\";
         private string pathFileName = "vu1demo_config.yaml";
         private ConfigContentsRoot localConfig;
@@ -57,6 +59,8 @@ namespace KR_VU1_ConfigurationManager
             // Set default values
             localConfig.dialUpdatePeriod = default_update_period;
             localConfig.masterKey = default_master_key;
+            localConfig.serverHost = default_server_host;
+            localConfig.serverPort = default_server_port;
 
             Log.Information("Set update period to {0}.", localConfig.dialUpdatePeriod);
             Log.Information("Set Master Key to {0}.", localConfig.masterKey);
@@ -82,6 +86,26 @@ namespace KR_VU1_ConfigurationManager
         public String GetMasterKey()
         {
             return localConfig.masterKey;
+        }
+
+        public String GetServerHost()
+        {
+            return string.IsNullOrWhiteSpace(localConfig.serverHost) ? default_server_host : localConfig.serverHost;
+        }
+
+        public int GetServerPort()
+        {
+            return localConfig.serverPort > 0 ? localConfig.serverPort : default_server_port;
+        }
+
+        public void SetServerHost(string host)
+        {
+            localConfig.serverHost = host;
+        }
+
+        public void SetServerPort(int port)
+        {
+            localConfig.serverPort = port;
         }
 
         public bool UpdateDialConfig(ClassDialGUI sensor, bool saveAfter)
@@ -272,6 +296,8 @@ namespace KR_VU1_ConfigurationManager
 
                 localConfig.dialUpdatePeriod = p.dialUpdatePeriod;
                 localConfig.masterKey = p.masterKey;
+                localConfig.serverHost = string.IsNullOrWhiteSpace(p.serverHost) ? default_server_host : p.serverHost;
+                localConfig.serverPort = p.serverPort > 0 ? p.serverPort : default_server_port;
 
                 foreach (ConfigContentsDial dial in p.dial_metrics)
                 {

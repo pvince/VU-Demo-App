@@ -9,7 +9,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:VU1WPF"
         mc:Ignorable="d"
-        Title="VU1 - Companion App" Height="600" Width="800" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" WindowStyle="None" Closing="mainWindow_Closing">
+        Title="VU1 - Companion App" Height="660" Width="800" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" WindowStyle="None" Closing="mainWindow_Closing">
     <Grid HorizontalAlignment="Right" Width="800">
 
 
@@ -58,6 +58,15 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <CheckBox x:Name="chRunOnStartup" Content="Run VU1 Demo App on system boot" HorizontalAlignment="Center" Margin="0,476,0,0" VerticalAlignment="Top" Width="229" Click="chRunOnSystemStart"/>
+
+                <!-- Server connection settings -->
+                <Separator Margin="5,505,5,0" VerticalAlignment="Top"/>
+                <Label Content="VU Server:" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,515,0,0" Width="60" ToolTip="VU Server host and port"/>
+                <TextBox x:Name="txtServerHost" Width="110" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,518,0,0" ToolTip="VU Server hostname or IP address (e.g. 192.168.1.100)"/>
+                <Label Content=":" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="173,515,0,0" Width="12"/>
+                <TextBox x:Name="txtServerPort" Width="45" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="183,518,0,0" ToolTip="VU Server port (default: 5340)" PreviewTextInput="IntegerTextBoxInput"/>
+                <Button x:Name="btnReconnect" Content="Reconnect" Width="229" Height="24" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,545,0,0" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect"/>
+                <Label x:Name="lblConnectionStatus" Content="" Height="22" Width="229" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,573,0,0" HorizontalContentAlignment="Center" FontSize="10"/>
 
 
             </Grid>
