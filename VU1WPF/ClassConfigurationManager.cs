@@ -9,7 +9,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Serilog;
 using static KR_VU1_Sensors.ClassVUSensors;
-using Serilog;
+using System.Threading.Tasks;
 
 
 namespace KR_VU1_ConfigurationManager
@@ -23,6 +23,8 @@ namespace KR_VU1_ConfigurationManager
         private string pathConfigFile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\KaranovicResearch\VU1-DemoApp\";
         private string pathFileName = "vu1demo_config.yaml";
         private ConfigContentsRoot localConfig;
+        private readonly DebouncedConfigSaver debouncedConfigSaver;
+        private readonly object saveFileLock = new object();
 
 
     public ClassConfigurationManager() 
@@ -30,6 +32,14 @@ namespace KR_VU1_ConfigurationManager
             Log.Information("The global logger has been configured");
 
             localConfig = new ConfigContentsRoot();
+            debouncedConfigSaver = new DebouncedConfigSaver(
+                () =>
+                {
+                    SaveConfigFile();
+                    return Task.CompletedTask;
+                },
+                TimeSpan.FromMilliseconds(120),
+                ex => Log.Error(ex, "Debounced config save failed"));
 
             LoadConfigFile();
 
@@ -137,7 +147,7 @@ namespace KR_VU1_ConfigurationManager
 
             if (saveAfter)
             {
-                SaveConfigFile();
+                RequestSaveConfigFileDebounced();
             }
 
             return true;
@@ -321,15 +331,33 @@ namespace KR_VU1_ConfigurationManager
 
         public void SaveConfigFile()
         {
+            SaveConfigFileInternal();
+        }
+
+        public void RequestSaveConfigFileDebounced()
+        {
+            debouncedConfigSaver.RequestSave();
+        }
+
+        public Task FlushPendingConfigSaveAsync()
+        {
+            return debouncedConfigSaver.FlushAsync();
+        }
+
+        private void SaveConfigFileInternal()
+        {
             string path = pathConfigFile + pathFileName;
             Log.Debug("Saving config file.");
 
             try
             {
-                using (StreamWriter streamWriter = new StreamWriter(path))
+                lock (saveFileLock)
                 {
-                    Serializer serializer = (Serializer)new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
-                    serializer.Serialize(streamWriter, localConfig);
+                    using (StreamWriter streamWriter = new StreamWriter(path))
+                    {
+                        Serializer serializer = (Serializer)new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+                        serializer.Serialize(streamWriter, localConfig);
+                    }
                 }
             }
             catch (Exception ex)

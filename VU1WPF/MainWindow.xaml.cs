@@ -200,7 +200,7 @@ namespace VU1WPF
             DialServer.RefreshDialList();
             List<DialInfo> restDials = DialServer.GetDialList();
 
-            Log.Information("Updatig local dials");
+            Log.Information("Updating local dials");
             gDials.Clear();
             foreach (DialInfo dial in restDials)
             {
@@ -255,7 +255,7 @@ namespace VU1WPF
             return fValue;
         }
 
-        private void btnSaveDialSettings_click(object sender, RoutedEventArgs e)
+        private async void btnSaveDialSettings_click(object sender, RoutedEventArgs e)
         {
             if (gCurrentlySelectedDial == null)
             {
@@ -281,7 +281,7 @@ namespace VU1WPF
             gCurrentlySelectedDial.ScaleMax = maxValue;
 
             // API Call to update dial name
-            if (DialServer.UpdateDialName(gCurrentlySelectedDial.UID, newName))
+            if (await DialServer.UpdateDialNameAsync(gCurrentlySelectedDial.UID, newName).ConfigureAwait(true))
             {
                 lbDials.Items.SortDescriptions.Clear();
                 lbDials.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("FriendlyName", System.ComponentModel.ListSortDirection.Ascending));
@@ -305,7 +305,7 @@ namespace VU1WPF
                     }
                 }
 
-                lblCurrentValue.Content = gCurrentlySelectedDial.Sensor.Value.ToString();
+                lblCurrentValue.Content = gCurrentlySelectedDial.Sensor?.Value?.ToString() ?? "0";
                 lblScalingMin.Content = gCurrentlySelectedDial.ScaleMin.ToString();
                 lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString();
 
@@ -337,7 +337,7 @@ namespace VU1WPF
             cbDialMetric.Items.Refresh();
         }
 
-        private void btnChangeImage_click(object sender, RoutedEventArgs e)
+        private async void btnChangeImage_click(object sender, RoutedEventArgs e)
         {
             if (gCurrentlySelectedDial == null || gCurrentlySelectedDial.UID == "")
             {
@@ -353,7 +353,7 @@ namespace VU1WPF
             //When the user select the file
             if (res.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                DialServer.UpdateDialBackgroundImage(gCurrentlySelectedDial.UID, res.FileName);
+                await DialServer.UpdateDialBackgroundImageAsync(gCurrentlySelectedDial.UID, res.FileName).ConfigureAwait(true);
             }
             
         }
@@ -449,7 +449,7 @@ namespace VU1WPF
 
             ConfigManager.SetServerHost(host);
             ConfigManager.SetServerPort(port);
-            ConfigManager.SaveConfigFile();
+            ConfigManager.RequestSaveConfigFileDebounced();
 
             string masterKey = ConfigManager.GetMasterKey();
             DialServer = new VU1_Server(host, port, masterKey);
@@ -495,7 +495,7 @@ namespace VU1WPF
 
         public void SaveDialConfig()
         {
-            ConfigManager.SaveConfigFile();
+            ConfigManager.RequestSaveConfigFileDebounced();
         }
 
 
@@ -546,15 +546,12 @@ namespace VU1WPF
                 string dialSensorIdentifier = dial.Sensor.Identifier.ToString();
 
                 Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {3}", dial.UID, dialValue, dial.Sensor.Identifier, fSensorValue));
-                await Task.Run(() =>
-                {
-                    DialServer.UpdateDialValue(dial.UID, dialValue);
+                await DialServer.UpdateDialValueAsync(dial.UID, dialValue).ConfigureAwait(false);
 
-                    if (bBacklightUpdate)
-                    {
-                        DialServer.UpdateDialBacklight(dial.UID, dialRed, dialGreen, dialBlue);
-                    }
-                }).ConfigureAwait(false);
+                if (bBacklightUpdate)
+                {
+                    await DialServer.UpdateDialBacklightAsync(dial.UID, dialRed, dialGreen, dialBlue).ConfigureAwait(false);
+                }
 
                 if (selectedSensorIdentifier == dialSensorIdentifier)
                 {
@@ -587,12 +584,14 @@ namespace VU1WPF
 
         private void mainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // Reset each dial
-            foreach (ClassDialGUI dial in gDials)
+            _ = Task.Run(async () =>
             {
-                DialServer.UpdateDialValue(dial.UID, 0);
-                DialServer.UpdateDialBacklight(dial.UID, 0, 0, 0);
-            }
+                foreach (ClassDialGUI dial in gDials)
+                {
+                    await DialServer.UpdateDialValueAsync(dial.UID, 0).ConfigureAwait(false);
+                    await DialServer.UpdateDialBacklightAsync(dial.UID, 0, 0, 0).ConfigureAwait(false);
+                }
+            });
         }
 
         public static bool RegistryValueExists(string hive_HKLM_or_HKCU, string registryRoot, string valueName)

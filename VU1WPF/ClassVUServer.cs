@@ -1,24 +1,12 @@
-﻿using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Policy;
-using System.Text;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Diagnostics;
-using Newtonsoft.Json.Linq;
-using System.DirectoryServices;
-using HidSharp.Utility;
 using Newtonsoft.Json;
-using Mono.Unix.Native;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
-using System.Collections.Specialized;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace KR_VU1_Server
 {
@@ -49,26 +37,26 @@ namespace KR_VU1_Server
         public string? status { get; set; }
     }
 
-    internal class VU1_Server
+    public class VU1_Server
     {
         private readonly String _server_ip = "localhost";
         private readonly int _server_port = 5340;
         private readonly String _api_key = "";
         private List<DialInfo> gDialInfo = new List<DialInfo>();
-        RestClient DialAPIClient;
-        private static readonly HttpClient client = new HttpClient();
+        private readonly object _dialInfoLock = new object();
+        private readonly HttpClient _httpClient;
 
         public VU1_Server(String API_Key) :
             this("localhost", 5340, API_Key)
         { }
 
-        public VU1_Server(String ServerIP = "localhost", int ServerPort = 5340, string API_Key = "")
+        public VU1_Server(String ServerIP = "localhost", int ServerPort = 5340, string API_Key = "", HttpClient? httpClient = null)
         {
             _server_ip = ServerIP;
             _server_port = ServerPort;
             _api_key = API_Key;
 
-            DialAPIClient = new RestClient(get_api_url());
+            _httpClient = httpClient ?? new HttpClient();
         }
 
         public String get_api_url()
@@ -84,31 +72,54 @@ namespace KR_VU1_Server
 
         public bool RefreshDialList()
         {
+            return RefreshDialListAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> RefreshDialListAsync(CancellationToken cancellationToken = default)
+        {
             try
             {
-                var request = new RestRequest(String.Format("dial/list?key={0}", _api_key));
-                //var response = await DialAPIClient.GetAsync(request);
-                var httpRes = DialAPIClient.Execute<VU1JSONDialListResponse>(request);
+                string url = String.Format(
+                    "{0}/dial/list?key={1}",
+                    get_api_url(),
+                    Uri.EscapeDataString(_api_key));
+                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
-                if (httpRes.StatusCode == HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    if (httpRes.Content == null) return false;
+                    string content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (String.IsNullOrWhiteSpace(content)) return false;
 
-                    VU1JSONDialListResponse dialData = JsonConvert.DeserializeObject<VU1JSONDialListResponse>(httpRes.Content);
+                    VU1JSONDialListResponse? dialData = JsonConvert.DeserializeObject<VU1JSONDialListResponse>(content);
+                    if (dialData == null)
+                    {
+                        return false;
+                    }
 
-                    gDialInfo.Clear();
-                    gDialInfo = dialData.data;
+                    lock (_dialInfoLock)
+                    {
+                        gDialInfo = dialData.data ?? new List<DialInfo>();
+                    }
 
                     return true;
 
                 }
                 else
                 {
-                    Trace.WriteLine($"HTTP Code: {httpRes.StatusCode}");
+                    Trace.WriteLine($"HTTP Code: {response.StatusCode}");
                     return false;
                 }
 
 
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (HttpRequestException e)
+            {
+                Trace.WriteLine(e.ToString());
+                return false;
             }
             catch (Exception e)
             {
@@ -120,45 +131,85 @@ namespace KR_VU1_Server
 
         public List<DialInfo> GetDialList()
         {
-            return gDialInfo;
+            lock (_dialInfoLock)
+            {
+                return new List<DialInfo>(gDialInfo);
+            }
         }
 
 
         public bool UpdateDialName(string uid, string dialName)
         {
-            if (dialName == null) return false;
-            if (uid == null) return false;
+            return UpdateDialNameAsync(uid, dialName).GetAwaiter().GetResult();
+        }
 
-            var request = new RestRequest(String.Format("dial/{0}/name?name={1}&key={2}", uid, dialName, _api_key));
-            var httpRes = DialAPIClient.Execute<VU1JSONStandardResponse>(request);
-            if (httpRes.StatusCode == HttpStatusCode.OK)
+        public async Task<bool> UpdateDialNameAsync(string uid, string dialName, CancellationToken cancellationToken = default)
+        {
+            if (String.IsNullOrWhiteSpace(dialName)) return false;
+            if (String.IsNullOrWhiteSpace(uid)) return false;
+
+            string url = String.Format(
+                "{0}/dial/{1}/name?name={2}&key={3}",
+                get_api_url(),
+                Uri.EscapeDataString(uid),
+                Uri.EscapeDataString(dialName),
+                Uri.EscapeDataString(_api_key));
+
+            try
             {
-                return true;
+                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                return response.StatusCode == HttpStatusCode.OK;
             }
-
-            return false;
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
+            }
         }
 
 
         public bool UpdateDialValue(string uid, int val)
         {
+            return UpdateDialValueAsync(uid, val).GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> UpdateDialValueAsync(string uid, int val, CancellationToken cancellationToken = default)
+        {
             if (uid == null || uid == "") return false;
 
-            // Check val
             val = Math.Clamp(val, 0, 100);
+            string url = String.Format(
+                "{0}/dial/{1}/set?value={2}&key={3}",
+                get_api_url(),
+                Uri.EscapeDataString(uid),
+                val,
+                Uri.EscapeDataString(_api_key));
 
-            var request = new RestRequest(String.Format("dial/{0}/set?value={1}&key={2}", uid, val, _api_key));
-            var httpRes = DialAPIClient.Execute<VU1JSONStandardResponse>(request);
-            if (httpRes.StatusCode == HttpStatusCode.OK)
+            try
             {
-                return true;
+                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                return response.StatusCode == HttpStatusCode.OK;
             }
-
-            return false;
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
+            }
         }
 
 
         public bool UpdateDialBacklight(string uid, int red, int green, int blue, bool values_as_percent=false)
+        {
+            return UpdateDialBacklightAsync(uid, red, green, blue, values_as_percent).GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> UpdateDialBacklightAsync(string uid, int red, int green, int blue, bool values_as_percent = false, CancellationToken cancellationToken = default)
         {
             if (uid == null || uid == "") return false;
 
@@ -179,29 +230,72 @@ namespace KR_VU1_Server
                 blue = (int)Math.Ceiling((decimal)(blue * 100 / 255));
             }
 
+            string url = String.Format(
+                "{0}/dial/{1}/backlight?red={2}&green={3}&blue={4}&white=0&key={5}",
+                get_api_url(),
+                Uri.EscapeDataString(uid),
+                red,
+                green,
+                blue,
+                Uri.EscapeDataString(_api_key));
 
-            var request = new RestRequest(String.Format("dial/{0}/backlight?red={1}&green={2}&blue={3}&white=0&key={4}", uid, red, green, blue, _api_key));
-            var httpRes = DialAPIClient.Execute<VU1JSONStandardResponse>(request);
-            if (httpRes.StatusCode == HttpStatusCode.OK)
+            try
             {
-                return true;
+                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                return response.StatusCode == HttpStatusCode.OK;
             }
-
-            return false;
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
+            }
         }
 
 
         public bool UpdateDialBackgroundImage(String uid, string filepath)
         {
+            return UpdateDialBackgroundImageAsync(uid, filepath).GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> UpdateDialBackgroundImageAsync(String uid, string filepath, CancellationToken cancellationToken = default)
+        {
+            if (String.IsNullOrWhiteSpace(uid) || String.IsNullOrWhiteSpace(filepath))
+            {
+                return false;
+            }
+
+            if (!File.Exists(filepath))
+            {
+                return false;
+            }
+
             try
             {
-                NameValueCollection values = new NameValueCollection();
-                NameValueCollection files = new NameValueCollection();
-                values.Add("key", get_api_key());
-                files.Add("imgfile", filepath);
-                sendHttpRequest(String.Format("{0}/dial/{1}/image/set", get_api_url(), uid), values, files);
-                
-                return true;
+                string url = String.Format("{0}/dial/{1}/image/set", get_api_url(), Uri.EscapeDataString(uid));
+                using var stream = File.OpenRead(filepath);
+                using var content = new MultipartFormDataContent();
+                content.Add(new StringContent(get_api_key()), "key");
+                content.Add(new StreamContent(stream), "imgfile", Path.GetFileName(filepath));
+
+                HttpResponseMessage response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+                return response.StatusCode == HttpStatusCode.OK;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (HttpRequestException err)
+            {
+                Trace.WriteLine(err.Message);
+                return false;
+            }
+            catch (IOException err)
+            {
+                Trace.WriteLine(err.Message);
+                return false;
             }
             catch (Exception err)
             {
@@ -209,72 +303,6 @@ namespace KR_VU1_Server
                 return false;
             }
         }
-
-
-        private static string sendHttpRequest(string url, NameValueCollection values, NameValueCollection files = null)
-        {
-            string boundary = "----------------------------" + DateTime.Now.Ticks.ToString("x");
-            // The first boundary
-            byte[] boundaryBytes = System.Text.Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
-            // The last boundary
-            byte[] trailer = System.Text.Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
-            // The first time it itereates, we need to make sure it doesn't put too many new paragraphs down or it completely messes up poor webbrick
-            byte[] boundaryBytesF = System.Text.Encoding.ASCII.GetBytes("--" + boundary + "\r\n");
-
-            // Create the request and set parameters
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.ContentType = "multipart/form-data; boundary=" + boundary;
-            request.Method = "POST";
-            request.KeepAlive = true;
-            request.Credentials = System.Net.CredentialCache.DefaultCredentials;
-
-            // Get request stream
-            Stream requestStream = request.GetRequestStream();
-
-            foreach (string key in values.Keys)
-            {
-                // Write item to stream
-                byte[] formItemBytes = System.Text.Encoding.UTF8.GetBytes(string.Format("Content-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}", key, values[key]));
-                requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
-                requestStream.Write(formItemBytes, 0, formItemBytes.Length);
-            }
-
-            if (files != null)
-            {
-                foreach (string key in files.Keys)
-                {
-                    if (File.Exists(files[key]))
-                    {
-                        int bytesRead = 0;
-                        byte[] buffer = new byte[2048];
-                        byte[] formItemBytes = System.Text.Encoding.UTF8.GetBytes(string.Format("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: application/octet-stream\r\n\r\n", key, files[key]));
-                        requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
-                        requestStream.Write(formItemBytes, 0, formItemBytes.Length);
-
-                        using (FileStream fileStream = new FileStream(files[key], FileMode.Open, FileAccess.Read))
-                        {
-                            while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                // Write file content to stream, byte by byte
-                                requestStream.Write(buffer, 0, bytesRead);
-                            }
-
-                            fileStream.Close();
-                        }
-                    }
-                }
-            }
-
-            // Write trailer and close stream
-            requestStream.Write(trailer, 0, trailer.Length);
-            requestStream.Close();
-
-            using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
-            {
-                return reader.ReadToEnd();
-            };
-        }
-
     }
 
 
