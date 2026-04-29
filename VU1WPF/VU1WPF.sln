@@ -20,6 +20,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		UIInvestigation|Any CPU = UIInvestigation|Any CPU
+		UIInvestigation|x64 = UIInvestigation|x64
+		UIInvestigation|x86 = UIInvestigation|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -34,6 +37,12 @@ Global
 		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.Release|x64.Build.0 = Release|Any CPU
 		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.Release|x86.ActiveCfg = Release|Any CPU
 		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.Release|x86.Build.0 = Release|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|Any CPU.ActiveCfg = UIInvestigation|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|Any CPU.Build.0 = UIInvestigation|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|x64.ActiveCfg = UIInvestigation|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|x64.Build.0 = UIInvestigation|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|x86.ActiveCfg = UIInvestigation|Any CPU
+		{848721A3-D315-4CCB-B9D3-6A56AC17801F}.UIInvestigation|x86.Build.0 = UIInvestigation|Any CPU
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -46,6 +55,12 @@ Global
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Release|x64.Build.0 = Release|Any CPU
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Release|x86.ActiveCfg = Release|Any CPU
 		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.Release|x86.Build.0 = Release|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|Any CPU.ActiveCfg = Debug|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|Any CPU.Build.0 = Debug|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|x64.ActiveCfg = Debug|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|x64.Build.0 = Debug|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|x86.ActiveCfg = Debug|Any CPU
+		{952E59C0-8898-4F24-8153-1EF4CE463ACA}.UIInvestigation|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

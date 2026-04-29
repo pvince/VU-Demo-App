@@ -60,13 +60,54 @@
                 <CheckBox x:Name="chRunOnStartup" Content="Run VU1 Demo App on system boot" HorizontalAlignment="Center" Margin="0,476,0,0" VerticalAlignment="Top" Width="229" Click="chRunOnSystemStart"/>
 
                 <!-- Server connection settings -->
-                <Separator Margin="5,505,5,0" VerticalAlignment="Top"/>
-                <Label Content="VU Server:" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,515,0,0" Width="60" ToolTip="VU Server host and port"/>
-                <TextBox x:Name="txtServerHost" Width="110" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,518,0,0" ToolTip="VU Server hostname or IP address (e.g. 192.168.1.100)"/>
-                <Label Content=":" Height="24" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="173,515,0,0" Width="12"/>
-                <TextBox x:Name="txtServerPort" Width="45" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="183,518,0,0" ToolTip="VU Server port (default: 5340)" PreviewTextInput="IntegerTextBoxInput"/>
-                <Button x:Name="btnReconnect" Content="Reconnect" Width="229" Height="24" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,545,0,0" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect"/>
-                <Label x:Name="lblConnectionStatus" Content="" Height="22" Width="229" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,573,0,0" HorizontalContentAlignment="Center" FontSize="10"/>
+                <Grid Width="229" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,496,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="13"/>
+                            <ColumnDefinition Width="46"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0" Content="VU Server:" Height="24" VerticalAlignment="Center" ToolTip="VU Server host and port"/>
+                        <TextBox Grid.Column="1" x:Name="txtServerHost" Width="110" Height="22" VerticalAlignment="Center" ToolTip="VU Server hostname or IP address (e.g. 192.168.1.100)"/>
+                        <Label Grid.Column="2" Content=":" Height="24" Width="12" HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="3" x:Name="txtServerPort" Width="45" Height="22" VerticalAlignment="Center" ToolTip="VU Server port (default: 5340)" PreviewTextInput="IntegerTextBoxInput"/>
+                    </Grid>
+
+                    <Separator Grid.Row="1" Margin="0,4,0,0"/>
+
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Click="btnRefreshDials_click" Content="{materialDesign:PackIcon Refresh}"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                Style="{StaticResource MaterialDesignFlatDarkButton}"
+                                Height="22" ToolTip="Reload the list of dials"/>
+
+                        <Button Grid.Column="2" x:Name="btnToggleDialUpdate" Click="btnToggleDialUpdate_click" Content="{materialDesign:PackIcon Pause}"
+                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                Style="{StaticResource MaterialDesignFlatDarkButton}"
+                                Height="22" ToolTip="Pause/Resume sending sensor values to VU1 server"/>
+                    </Grid>
+
+                    <Button Grid.Row="5" x:Name="btnReconnect" Content="Reconnect" Height="24" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect"/>
+                    <Label Grid.Row="6" x:Name="lblConnectionStatus" Content="" Height="22" HorizontalContentAlignment="Center" FontSize="10"/>
+                </Grid>
 
 
             </Grid>
@@ -157,18 +198,6 @@
                 <Button Grid.Row="14" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click"/>
             </Grid>
         </Canvas>
-
-        <Button Click="btnRefreshDials_click" Content="{materialDesign:PackIcon Refresh}"
-          IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-          Style="{StaticResource MaterialDesignFlatDarkButton}"
-                Width="100"
-          ToolTip="Reload the list of dials" Margin="6,518,680,10" Height="22" />
-
-        <Button x:Name="btnToggleDialUpdate" Click="btnToggleDialUpdate_click" Content="{materialDesign:PackIcon Pause}"
-          IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-          Style="{StaticResource MaterialDesignFlatDarkButton}"
-                Width="100" HorizontalAlignment="Right"
-          ToolTip="Pause/Resume sending sensor values to VU1 server" Margin="6,518,558,10" Height="22" />
 
         <Label Content="KaranovicResearch / Streacom" Height="20" HorizontalContentAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5, 0, 0, 5" Background="{x:Null}" Foreground="#FFB53B15" Width="239"/>
     </Grid>
