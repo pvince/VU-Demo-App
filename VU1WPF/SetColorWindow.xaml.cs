@@ -5,7 +5,7 @@ namespace VU1WPF
 {
     public partial class SetColorWindow : Window
     {
-        protected MainWindow mainWindow { get; set; }
+        protected MainWindow? mainWindow { get; set; }
 
         public void SetMainWindow(MainWindow mw)
         {

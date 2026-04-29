@@ -16,19 +16,47 @@ namespace KR_VU1_ConfigurationManager
 {
     public class ClassConfigurationManager
     {
-        private float default_update_period = 0.5f;
-        private string default_master_key = "cTpAWYuRpA2zx75Yh961Cg";
-        private string default_server_host = "localhost";
-        private int default_server_port = 5340;
-        private string pathConfigFile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\KaranovicResearch\VU1-DemoApp\";
-        private string pathFileName = "vu1demo_config.yaml";
+        private const string DefaultConfigFileName = "vu1demo_config.yaml";
+        private readonly float default_update_period = 0.5f;
+        private readonly string default_master_key = "cTpAWYuRpA2zx75Yh961Cg";
+        private readonly string default_server_host = "localhost";
+        private readonly int default_server_port = 5340;
+        private readonly string pathConfigFile;
+        private readonly string pathFileName;
+        private readonly bool showLoadFailureDialog;
         private ConfigContentsRoot localConfig;
         private readonly DebouncedConfigSaver debouncedConfigSaver;
         private readonly object saveFileLock = new object();
 
-
-    public ClassConfigurationManager() 
+        public ClassConfigurationManager()
+            : this(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "KaranovicResearch", "VU1-DemoApp"),
+                DefaultConfigFileName,
+                true)
         {
+        }
+
+        public ClassConfigurationManager(string configDirectoryPath, bool showLoadFailureDialog = true)
+            : this(configDirectoryPath, DefaultConfigFileName, showLoadFailureDialog)
+        {
+        }
+
+        public ClassConfigurationManager(string configDirectoryPath, string configFileName, bool showLoadFailureDialog = true)
+        {
+            if (string.IsNullOrWhiteSpace(configDirectoryPath))
+            {
+                throw new ArgumentException("Config directory path is required.", nameof(configDirectoryPath));
+            }
+
+            if (string.IsNullOrWhiteSpace(configFileName))
+            {
+                throw new ArgumentException("Config file name is required.", nameof(configFileName));
+            }
+
+            this.showLoadFailureDialog = showLoadFailureDialog;
+            pathConfigFile = configDirectoryPath;
+            pathFileName = configFileName;
+
             Log.Information("The global logger has been configured");
 
             localConfig = new ConfigContentsRoot();
@@ -61,9 +89,14 @@ namespace KR_VU1_ConfigurationManager
             SaveConfigFile();   // Save default if no config file exists
         }
 
+        private string GetConfigPath()
+        {
+            return Path.Combine(pathConfigFile, pathFileName);
+        }
+
         private void Initialize_EmptyConfigFile()
         {
-            string path = pathConfigFile + pathFileName;
+            string path = GetConfigPath();
             Log.Information("Initializing empty config file at: {0}", path);
 
             // Set default values
@@ -78,8 +111,8 @@ namespace KR_VU1_ConfigurationManager
             // Check if file exists
             if (!File.Exists(path))
             {
-                System.IO.Directory.CreateDirectory(pathConfigFile);
-                using (StreamWriter sw = File.AppendText(path))
+                Directory.CreateDirectory(pathConfigFile);
+                using (File.Create(path))
                 {
                 }
             }
@@ -121,27 +154,27 @@ namespace KR_VU1_ConfigurationManager
         public bool UpdateDialConfig(ClassDialGUI sensor, bool saveAfter)
         {
             var dial = localConfig.dial_metrics.Find(item => item.dial_uid == sensor.UID);
+            string sensorIdentifier = sensor.Sensor?.Identifier.ToString() ?? sensor.Metric;
+
             if (dial != null)
             {
                 dial.dial_uid = sensor.UID;
                 dial.scaling_min = sensor.ScaleMin;
                 dial.scaling_max = sensor.ScaleMax;
                 dial.thresholds = DialGUI_to_ConfigThresholds(sensor.Thresholds);
-
-                // If sensor is defined
-                if(sensor.Sensor != null)
-                {
-                    dial.sensor_identifier = sensor.Sensor.Identifier.ToString();
-                }
-                else
-                {
-                    dial.sensor_identifier = "";
-                }
+                dial.sensor_identifier = sensorIdentifier;
                  
             }
             else
             {
-                ConfigContentsDial tmp = new ConfigContentsDial { dial_uid = sensor.UID, sensor_identifier = sensor.Metric.ToString(), thresholds = DialGUI_to_ConfigThresholds(sensor.Thresholds) };
+                ConfigContentsDial tmp = new ConfigContentsDial
+                {
+                    dial_uid = sensor.UID,
+                    sensor_identifier = sensorIdentifier,
+                    scaling_min = sensor.ScaleMin,
+                    scaling_max = sensor.ScaleMax,
+                    thresholds = DialGUI_to_ConfigThresholds(sensor.Thresholds)
+                };
                 localConfig.dial_metrics.Add(tmp);
             }
 
@@ -182,7 +215,7 @@ namespace KR_VU1_ConfigurationManager
         {
             List<ClassDialThreshold> ret = new();
 
-            ConfigContentsDial sid = localConfig.dial_metrics.Find(item => item.dial_uid == uid);
+            ConfigContentsDial? sid = localConfig.dial_metrics.Find(item => item.dial_uid == uid);
 
             if (sid == null)
             {
@@ -261,7 +294,7 @@ namespace KR_VU1_ConfigurationManager
         {
             try
             {
-                string path = pathConfigFile + pathFileName;
+                string path = GetConfigPath();
                 string fileContents;
 
                 if (!File.Exists(path))
@@ -289,7 +322,7 @@ namespace KR_VU1_ConfigurationManager
                 Log.Debug(fileContents.ToString());
                 Log.Debug("---- END debug info ---");
 
-                var p = deserializer.Deserialize<ConfigContentsRoot>(fileContents);
+                ConfigContentsRoot? p = deserializer.Deserialize<ConfigContentsRoot>(fileContents);
 
                 if (p == null)
                 {
@@ -299,15 +332,23 @@ namespace KR_VU1_ConfigurationManager
                     Log.Error(fileContents.ToString());
                     Log.Error("---- END debug info ---");
 
-                    localConfig.dialUpdatePeriod = default_update_period;
-                    localConfig.masterKey = default_master_key;
+                    localConfig = new ConfigContentsRoot
+                    {
+                        dialUpdatePeriod = default_update_period,
+                        masterKey = default_master_key,
+                        serverHost = default_server_host,
+                        serverPort = default_server_port
+                    };
                     return;
                 }
 
-                localConfig.dialUpdatePeriod = p.dialUpdatePeriod;
-                localConfig.masterKey = p.masterKey;
-                localConfig.serverHost = string.IsNullOrWhiteSpace(p.serverHost) ? default_server_host : p.serverHost;
-                localConfig.serverPort = p.serverPort > 0 ? p.serverPort : default_server_port;
+                localConfig = new ConfigContentsRoot
+                {
+                    dialUpdatePeriod = p.dialUpdatePeriod,
+                    masterKey = string.IsNullOrWhiteSpace(p.masterKey) ? default_master_key : p.masterKey,
+                    serverHost = string.IsNullOrWhiteSpace(p.serverHost) ? default_server_host : p.serverHost,
+                    serverPort = p.serverPort > 0 ? p.serverPort : default_server_port
+                };
 
                 foreach (ConfigContentsDial dial in p.dial_metrics)
                 {
@@ -318,12 +359,19 @@ namespace KR_VU1_ConfigurationManager
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString(), "YAML read process failed.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Log.Error("Encountered exception while loading config.");
                 Log.Error(e.ToString());
-                
-                // Let's close the app now
-                System.Windows.Forms.Application.Exit();
+
+                if (showLoadFailureDialog)
+                {
+                    MessageBox.Show(e.ToString(), "YAML read process failed.", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    // Let's close the app now
+                    System.Windows.Forms.Application.Exit();
+                    return;
+                }
+
+                throw;
             }
 
         }
@@ -346,13 +394,14 @@ namespace KR_VU1_ConfigurationManager
 
         private void SaveConfigFileInternal()
         {
-            string path = pathConfigFile + pathFileName;
+            string path = GetConfigPath();
             Log.Debug("Saving config file.");
 
             try
             {
                 lock (saveFileLock)
                 {
+                    Directory.CreateDirectory(pathConfigFile);
                     using (StreamWriter streamWriter = new StreamWriter(path))
                     {
                         Serializer serializer = (Serializer)new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();

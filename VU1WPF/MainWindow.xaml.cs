@@ -23,7 +23,6 @@ namespace VU1WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        public object FormWindowState { get; private set; }
         List<VU1_Sensor> computerSensors = new List<VU1_Sensor>();
         public ClassConfigurationManager ConfigManager;
         VU1_SensorManager SensorManager;
@@ -127,7 +126,7 @@ namespace VU1WPF
             this.Hide();
         }
 
-        void notifyIcon_DoubleClick(object sender, EventArgs e)
+        void notifyIcon_DoubleClick(object? sender, EventArgs e)
         {
             this.Show();
             WindowState = WindowState.Normal;
@@ -137,16 +136,19 @@ namespace VU1WPF
 
         private void lbDials_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ClassDialGUI sel = lbDials.SelectedItem as ClassDialGUI;
-            if (sel == null) return;
+            if (lbDials.SelectedItem is not ClassDialGUI sel)
+            {
+                return;
+            }
 
             gCurrentlySelectedDial = sel;
+            var currentSensor = gCurrentlySelectedDial.Sensor;
 
             txtlSelectedDialName.Text = sel.FriendlyName.ToString();
             lblSelectedDialUID.Content = sel.UID.ToString();
-            if (gCurrentlySelectedDial.Sensor != null)
+            if (currentSensor != null)
             {
-                lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", gCurrentlySelectedDial.Sensor.Name.ToString(), gCurrentlySelectedDial.Sensor.SensorType.ToString(), gCurrentlySelectedDial.Sensor.Identifier.ToString());
+                lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", currentSensor.Name.ToString(), currentSensor.SensorType.ToString(), currentSensor.Identifier.ToString());
                 //lblCurrentValue.Content = gCurrentlySelectedDial.Sensor.Value.ToString();
                 lblScalingMin.Content = gCurrentlySelectedDial.ScaleMin.ToString();
                 lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString();
@@ -180,7 +182,7 @@ namespace VU1WPF
 
             if (sensorIdentifier != "")
             {
-                VU1_Sensor tmpSensor = SensorManager.FindSensorByIdentifier(sensorIdentifier);
+                VU1_Sensor? tmpSensor = SensorManager.FindSensorByIdentifier(sensorIdentifier);
                 if(tmpSensor != null)
                 {
                     tmpDial.Sensor = tmpSensor.Sensor;
@@ -297,11 +299,12 @@ namespace VU1WPF
                 if (cbDialMetric.SelectedItem != null)
                 {
                     //gCurrentlySelectedDial.Sensor = computerSensors[cbDialMetric.SelectedIndex].Sensor;
-                    VU1_Sensor selectedSensor = cbDialMetric.SelectedItem as VU1_Sensor;
+                    VU1_Sensor? selectedSensor = cbDialMetric.SelectedItem as VU1_Sensor;
                     if (selectedSensor != null)
                     {
-                        gCurrentlySelectedDial.Sensor = selectedSensor.Sensor;
-                        lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", gCurrentlySelectedDial.Sensor.Name.ToString(), gCurrentlySelectedDial.Sensor.SensorType.ToString(), gCurrentlySelectedDial.Sensor.Identifier.ToString());
+                        var sensorNode = selectedSensor.Sensor;
+                        gCurrentlySelectedDial.Sensor = sensorNode;
+                        lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", sensorNode.Name.ToString(), sensorNode.SensorType.ToString(), sensorNode.Identifier.ToString());
                     }
                 }
 
@@ -317,7 +320,8 @@ namespace VU1WPF
 
         private void cbDialMetricCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cbDialMetricCategory.SelectedItem == null)
+            string? selectedCategory = cbDialMetricCategory.SelectedItem?.ToString();
+            if (String.IsNullOrWhiteSpace(selectedCategory))
             {
                 return;
             }
@@ -327,7 +331,7 @@ namespace VU1WPF
             foreach (var sens in computerSensors)
             {
 
-                if (sens.Sensor.SensorType.ToString().Contains(cbDialMetricCategory.SelectedItem.ToString()))
+                if (sens.Sensor.SensorType.ToString().Contains(selectedCategory))
                 {
                     filtered.Add(sens);
                 }
@@ -387,8 +391,11 @@ namespace VU1WPF
 
         private void chRunOnSystemStart(object sender, RoutedEventArgs e)
         {
-
-            RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            using RegistryKey? rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            if (rk == null)
+            {
+                return;
+            }
 
             if (chRunOnStartup.IsChecked == true)
             {
@@ -510,7 +517,8 @@ namespace VU1WPF
         private async Task RefreshDialMetricAsync(ClassDialGUI dial)
         {
             // Refresh dial sensor value
-            if (dial.Sensor != null)
+            var sensor = dial.Sensor;
+            if (sensor != null)
             {
                 // Initial dial value
                 int dialValue = 0;
@@ -521,16 +529,16 @@ namespace VU1WPF
 
                 float fSensorValue = await Task.Run(() =>
                 {
-                    dial.Sensor.Hardware.Update();
-                    return dial.Sensor.Value ?? 0;
+                    sensor.Hardware.Update();
+                    return sensor.Value ?? 0;
                 }).ConfigureAwait(false);
 
                 dialValue = DialComputationEngine.ComputeDialValuePercent(dial.ScaleMin, dial.ScaleMax, fSensorValue);
 
                 // Update backlight based on defined thresholds
-                if (dial.Thresholds != null && dial.Thresholds.Count > 0)
+                if (dial.Thresholds.Count > 0)
                 {
-                    ClassDialThreshold match = DialComputationEngine.ResolveThresholdColor(dial.Thresholds, dialValue);
+                    ClassDialThreshold? match = DialComputationEngine.ResolveThresholdColor(dial.Thresholds, dialValue);
 
                     if (match != null)
                     {
@@ -543,9 +551,9 @@ namespace VU1WPF
 
 
                 string selectedSensorIdentifier = gCurrentlySelectedDial.Sensor?.Identifier.ToString() ?? String.Empty;
-                string dialSensorIdentifier = dial.Sensor.Identifier.ToString();
+                string dialSensorIdentifier = sensor.Identifier.ToString();
 
-                Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {3}", dial.UID, dialValue, dial.Sensor.Identifier, fSensorValue));
+                Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {3}", dial.UID, dialValue, sensor.Identifier, fSensorValue));
                 await DialServer.UpdateDialValueAsync(dial.UID, dialValue).ConfigureAwait(false);
 
                 if (bBacklightUpdate)
@@ -596,7 +604,7 @@ namespace VU1WPF
 
         public static bool RegistryValueExists(string hive_HKLM_or_HKCU, string registryRoot, string valueName)
         {
-            RegistryKey root;
+            RegistryKey? root;
             switch (hive_HKLM_or_HKCU.ToUpper())
             {
                 case "HKLM":
@@ -609,11 +617,11 @@ namespace VU1WPF
                     throw new System.InvalidOperationException("parameter registryRoot must be either \"HKLM\" or \"HKCU\"");
             }
 
-            return root.GetValue(valueName) != null;
+            return root?.GetValue(valueName) != null;
         }
 
 
-        private void TimerTick(object sender, EventArgs e)
+        private void TimerTick(object? sender, EventArgs e)
         {
             // Don't run if pause has been requested
             if (gDialUpdatePaused) return;
@@ -625,7 +633,7 @@ namespace VU1WPF
         }
 
 
-        static void OnProcessExit(object sender, EventArgs e)
+        static void OnProcessExit(object? sender, EventArgs e)
         {
             Log.CloseAndFlush();
         }

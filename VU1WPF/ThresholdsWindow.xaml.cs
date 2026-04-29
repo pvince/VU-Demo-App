@@ -11,8 +11,8 @@ namespace VU1WPF
 {
     public partial class ThresholdsWindow : Window
     {
-        protected MainWindow mainWindow { get; set; }
-        protected ClassConfigurationManager ConfigManager { get; set; }
+        protected MainWindow? mainWindow { get; set; }
+        protected ClassConfigurationManager? ConfigManager { get; set; }
 
         public void SetMainWindow(MainWindow mw)
         {
@@ -58,7 +58,10 @@ namespace VU1WPF
             int green = (int)sliderGreen.Value;
             int blue = (int)sliderBlue.Value;
 
-            if (mainWindow != null )
+            MainWindow? ownerWindow = mainWindow;
+            ClassConfigurationManager? configManager = ConfigManager;
+
+            if (ownerWindow != null && configManager != null)
             {
                 // Create new threshold
                 ClassDialThreshold newThreshold = new() { 
@@ -69,18 +72,18 @@ namespace VU1WPF
                 };
 
                 // Check if it already exists
-                int index = mainWindow.gCurrentlySelectedDial.Thresholds.FindIndex(item => item.Threshold == value);
+                int index = ownerWindow.gCurrentlySelectedDial.Thresholds.FindIndex(item => item.Threshold == value);
                 if (index >= 0)
                 {
-                    mainWindow.gCurrentlySelectedDial.Thresholds[index] = newThreshold;
+                    ownerWindow.gCurrentlySelectedDial.Thresholds[index] = newThreshold;
                 }
                 // Otherwise add new
                 else
                 {
-                    mainWindow.gCurrentlySelectedDial.Thresholds.Add(newThreshold);
+                    ownerWindow.gCurrentlySelectedDial.Thresholds.Add(newThreshold);
                 }
 
-                ConfigManager.UpdateDialConfig(mainWindow.gCurrentlySelectedDial, true);
+                configManager.UpdateDialConfig(ownerWindow.gCurrentlySelectedDial, true);
                 sortThresholds();
             }
             else
@@ -92,13 +95,16 @@ namespace VU1WPF
 
         private void btnDeleteThreshold_click(object sender, RoutedEventArgs e)
         {
-            if (mainWindow != null)
+            MainWindow? ownerWindow = mainWindow;
+            ClassConfigurationManager? configManager = ConfigManager;
+
+            if (ownerWindow != null && configManager != null)
             {
                 // Check if value is selected
                 if (cbThresholds.SelectedItem != null)
                 {
-                    mainWindow.gCurrentlySelectedDial.Thresholds.Remove((ClassDialThreshold) cbThresholds.SelectedItem);
-                    ConfigManager.UpdateDialConfig(mainWindow.gCurrentlySelectedDial, true);
+                    ownerWindow.gCurrentlySelectedDial.Thresholds.Remove((ClassDialThreshold)cbThresholds.SelectedItem);
+                    configManager.UpdateDialConfig(ownerWindow.gCurrentlySelectedDial, true);
                     sortThresholds();
                 }
             }

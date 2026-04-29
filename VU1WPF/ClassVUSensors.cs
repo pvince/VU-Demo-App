@@ -13,20 +13,15 @@ namespace KR_VU1_Sensors
         public class VU1_Sensor
         {
             public ISensor Sensor { get; set; } // Actual Sensor node
-            public String DisplayName { get; set; } // "Pretty" name displayed in the GUI
+            public String DisplayName { get; set; } = String.Empty; // "Pretty" name displayed in the GUI
 
             public VU1_Sensor(ISensor sens, String name = "")
             {
                 Sensor = sens;
 
-                if (DisplayName == "" || DisplayName == null)
-                {
-                    DisplayName = sens.Identifier.ToString();
-                }
-                else
-                {
-                    DisplayName = name;
-                }
+                DisplayName = String.IsNullOrWhiteSpace(name)
+                    ? sens.Identifier.ToString()
+                    : name;
                 
             }
         }
@@ -107,10 +102,9 @@ namespace KR_VU1_Sensors
                 }
             }
 
-            public VU1_Sensor FindSensorByIdentifier(string identifier)
+            public VU1_Sensor? FindSensorByIdentifier(string identifier)
             {
-                VU1_Sensor sens = gSensorsAvailable.Find(item => item.Sensor.Identifier.ToString() == identifier);
-                return sens;
+                return gSensorsAvailable.Find(item => item.Sensor.Identifier.ToString() == identifier);
             }
 
 

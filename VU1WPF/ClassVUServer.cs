@@ -19,11 +19,11 @@ namespace KR_VU1_Server
 
     public class DialInfo
     {
-        public string uid { get; set; }
-        public string dial_name { get; set; }
+        public string uid { get; set; } = string.Empty;
+        public string dial_name { get; set; } = string.Empty;
         public int value { get; set; }
-        public Backlight backlight { get; set; }
-        public object image_file { get; set; }
+        public Backlight backlight { get; set; } = new Backlight();
+        public object? image_file { get; set; }
     }
 
     public class VU1JSONDialListResponse

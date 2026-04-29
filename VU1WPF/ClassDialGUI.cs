@@ -17,7 +17,7 @@ namespace VU1WPF
         private int gValue = 0;
         private string gSensorIdentifier = "";
         private string gSensorName = "";
-        private ISensor gSensor;
+        private ISensor? gSensor;
         private List<ClassDialThreshold> gThresholds = new List<ClassDialThreshold>();
 
         public string FriendlyName 
@@ -67,7 +67,7 @@ namespace VU1WPF
             set { gSensorName = value; }
         }
 
-        public ISensor Sensor
+        public ISensor? Sensor
         {
             get { return gSensor; }
             set { gSensor = value; }
