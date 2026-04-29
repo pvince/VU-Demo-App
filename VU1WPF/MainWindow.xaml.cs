@@ -138,8 +138,7 @@ namespace VU1WPF
             ClassDialGUI sel = lbDials.SelectedItem as ClassDialGUI;
             if (sel == null) return;
 
-
-            gCurrentlySelectedDial = lbDials.SelectedItem as ClassDialGUI;
+            gCurrentlySelectedDial = sel;
 
             txtlSelectedDialName.Text = sel.FriendlyName.ToString();
             lblSelectedDialUID.Content = sel.UID.ToString();
@@ -297,8 +296,11 @@ namespace VU1WPF
                 {
                     //gCurrentlySelectedDial.Sensor = computerSensors[cbDialMetric.SelectedIndex].Sensor;
                     VU1_Sensor selectedSensor = cbDialMetric.SelectedItem as VU1_Sensor;
-                    gCurrentlySelectedDial.Sensor = selectedSensor.Sensor;
-                    lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", gCurrentlySelectedDial.Sensor.Name.ToString(), gCurrentlySelectedDial.Sensor.SensorType.ToString(), gCurrentlySelectedDial.Sensor.Identifier.ToString());
+                    if (selectedSensor != null)
+                    {
+                        gCurrentlySelectedDial.Sensor = selectedSensor.Sensor;
+                        lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", gCurrentlySelectedDial.Sensor.Name.ToString(), gCurrentlySelectedDial.Sensor.SensorType.ToString(), gCurrentlySelectedDial.Sensor.Identifier.ToString());
+                    }
                 }
 
                 lblCurrentValue.Content = gCurrentlySelectedDial.Sensor.Value.ToString();
@@ -521,45 +523,12 @@ namespace VU1WPF
                 // Fetch sensor value
                 float fSensorValue = dial.Sensor.Value ?? 0;
 
-                // Edge case: If for whatever reason scale min and scale max are the same, we will show 0%
-                // Value is less than scale min means dial shows 0%
-                if ( (dial.ScaleMin == dial.ScaleMax) || (fSensorValue <= dial.ScaleMin) )
-                {
-                    dialValue = 0;
-                }
-                // Value is greater than scale max means dial shows 100%
-                else if (fSensorValue >= dial.ScaleMax)
-                {
-                    dialValue = 100;
-                }
-                // Avoid division by zero
-                else if (dial.ScaleMax == 0)
-                {
-                    dialValue = 100;
-                }
-                // Value is in between scale min and max. Convert to appropriate percent value
-                else
-                {
-                    float scaledValue = ((fSensorValue - dial.ScaleMin) / (dial.ScaleMax - dial.ScaleMin)) * 100;
-                    if (scaledValue < 0)
-                    {
-                        Log.Verbose("Clipping scaled value to 0");
-                        scaledValue = 0;
-                    }
-                    else if (scaledValue > 100)
-                    {
-                        Log.Verbose("Clipping scaled value to 100");
-                        scaledValue = 100;
-                    }
-
-                    dialValue = (int)Math.Round(scaledValue);
-                }
+                dialValue = DialComputationEngine.ComputeDialValuePercent(dial.ScaleMin, dial.ScaleMax, fSensorValue);
 
                 // Update backlight based on defined thresholds
                 if (dial.Thresholds != null && dial.Thresholds.Count > 0)
                 {
-//                    ClassDialThreshold match = dial.Thresholds.FindLast(item => item.Threshold <= dialValue);
-                    ClassDialThreshold match = dial.Thresholds.Find(item => item.Threshold >= dialValue);
+                    ClassDialThreshold match = DialComputationEngine.ResolveThresholdColor(dial.Thresholds, dialValue);
 
                     if (match != null)
                     {

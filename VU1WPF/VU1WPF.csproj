@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Compile Remove="Logger.cs" />
+    <Compile Remove="VU1WPF.Tests\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
