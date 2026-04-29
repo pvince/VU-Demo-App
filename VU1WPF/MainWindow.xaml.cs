@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using Microsoft.Win32;
 using Serilog;
+using System.Threading.Tasks;
 
 namespace VU1WPF
 {
@@ -27,6 +28,7 @@ namespace VU1WPF
         public ClassConfigurationManager ConfigManager;
         VU1_SensorManager SensorManager;
         VU1_Server DialServer;
+        private readonly DialUpdateOrchestrator gDialUpdateOrchestrator = new DialUpdateOrchestrator();
         public List<ClassDialGUI> gDials = new List<ClassDialGUI>();
         public ClassDialGUI gCurrentlySelectedDial = new ClassDialGUI { FriendlyName = "", UID = "" };
         bool gDialUpdatePaused = false;
@@ -505,7 +507,7 @@ namespace VU1WPF
             }
         }
 
-        private void RefreshDialMetric(ClassDialGUI dial)
+        private async Task RefreshDialMetricAsync(ClassDialGUI dial)
         {
             // Refresh dial sensor value
             if (dial.Sensor != null)
@@ -517,11 +519,11 @@ namespace VU1WPF
                 int dialBlue = 0;
                 bool bBacklightUpdate = false;
 
-                // Reload sensor
-                dial.Sensor.Hardware.Update();
-
-                // Fetch sensor value
-                float fSensorValue = dial.Sensor.Value ?? 0;
+                float fSensorValue = await Task.Run(() =>
+                {
+                    dial.Sensor.Hardware.Update();
+                    return dial.Sensor.Value ?? 0;
+                }).ConfigureAwait(false);
 
                 dialValue = DialComputationEngine.ComputeDialValuePercent(dial.ScaleMin, dial.ScaleMax, fSensorValue);
 
@@ -540,24 +542,37 @@ namespace VU1WPF
                 }
 
 
-                // Check if we need to update GUI
-                if (gCurrentlySelectedDial.Sensor != null)
+                string selectedSensorIdentifier = gCurrentlySelectedDial.Sensor?.Identifier.ToString() ?? String.Empty;
+                string dialSensorIdentifier = dial.Sensor.Identifier.ToString();
+
+                Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {3}", dial.UID, dialValue, dial.Sensor.Identifier, fSensorValue));
+                await Task.Run(() =>
                 {
-                    if (gCurrentlySelectedDial.Sensor.Identifier == dial.Sensor.Identifier)
+                    DialServer.UpdateDialValue(dial.UID, dialValue);
+
+                    if (bBacklightUpdate)
+                    {
+                        DialServer.UpdateDialBacklight(dial.UID, dialRed, dialGreen, dialBlue);
+                    }
+                }).ConfigureAwait(false);
+
+                if (selectedSensorIdentifier == dialSensorIdentifier)
+                {
+                    await Dispatcher.InvokeAsync(() =>
                     {
                         lblCurrentPercent.Content = String.Format("{0}%", dialValue);
                         lblCurrentValue.Content = String.Format("[{0:0.000}]", fSensorValue);
-                    }
+                    });
                 }
+            }
+        }
 
-                Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {1}", dial.UID, dialValue, dial.Sensor.Identifier, fSensorValue));
-                DialServer.UpdateDialValue(dial.UID, dialValue);
-
-                if(bBacklightUpdate)
-                {
-                    DialServer.UpdateDialBacklight(dial.UID, dialRed, dialGreen, dialBlue);
-                    bBacklightUpdate = false;
-                }
+        private async Task ProcessDialUpdatesAsync()
+        {
+            List<ClassDialGUI> dialsToUpdate = gDials.Where(d => d.Sensor != null).ToList();
+            foreach (ClassDialGUI dial in dialsToUpdate)
+            {
+                await RefreshDialMetricAsync(dial).ConfigureAwait(false);
             }
         }
 
@@ -604,13 +619,9 @@ namespace VU1WPF
             // Don't run if pause has been requested
             if (gDialUpdatePaused) return;
 
-            // Update each dial sensor
-            foreach (ClassDialGUI dial in gDials)
+            if (!gDialUpdateOrchestrator.TryRun(ProcessDialUpdatesAsync))
             {
-                if (dial.Sensor != null)
-                {
-                    RefreshDialMetric(dial);
-                }
+                Log.Verbose("Skipping tick because previous update is still running.");
             }
         }
 
