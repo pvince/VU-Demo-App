@@ -154,7 +154,7 @@ namespace KR_VU1_ConfigurationManager
         public bool UpdateDialConfig(ClassDialGUI sensor, bool saveAfter)
         {
             var dial = localConfig.dial_metrics.Find(item => item.dial_uid == sensor.UID);
-            string sensorIdentifier = sensor.Sensor?.Identifier.ToString() ?? sensor.Metric;
+            string sensorIdentifier = sensor.ConfiguredSensorIdentifier;
 
             if (dial != null)
             {
@@ -162,7 +162,9 @@ namespace KR_VU1_ConfigurationManager
                 dial.scaling_min = sensor.ScaleMin;
                 dial.scaling_max = sensor.ScaleMax;
                 dial.thresholds = DialGUI_to_ConfigThresholds(sensor.Thresholds);
-                dial.sensor_identifier = sensorIdentifier;
+                dial.sensor_identifier = String.IsNullOrWhiteSpace(sensorIdentifier)
+                    ? dial.sensor_identifier
+                    : sensorIdentifier;
                  
             }
             else

@@ -71,6 +71,61 @@ public sealed class ConfigurationManagerTests : IDisposable
         Assert.Equal(56, thresholds[0].BacklightBlue);
     }
 
+    [Fact]
+    public void UpdateDialConfig_PreservesStoredSensorIdentifier_WhenSensorIsUnavailable()
+    {
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+        var dial = new ClassDialGUI
+        {
+            UID = "dial-2",
+            SensorIdentifier = "/amdcpu/0/temperature/2",
+            ScaleMin = 5f,
+            ScaleMax = 95f,
+            Thresholds = new List<ClassDialThreshold>
+            {
+                new()
+                {
+                    Threshold = 60,
+                    BacklightRed = 1,
+                    BacklightGreen = 2,
+                    BacklightBlue = 3,
+                }
+            }
+        };
+
+        bool created = manager.UpdateDialConfig(dial, saveAfter: false);
+
+        Assert.True(created);
+        Assert.Equal("/amdcpu/0/temperature/2", manager.GetDialMetric("dial-2"));
+
+        dial.ScaleMin = 15f;
+        dial.ScaleMax = 85f;
+        dial.Thresholds = new List<ClassDialThreshold>
+        {
+            new()
+            {
+                Threshold = 75,
+                BacklightRed = 4,
+                BacklightGreen = 5,
+                BacklightBlue = 6,
+            }
+        };
+
+        bool updated = manager.UpdateDialConfig(dial, saveAfter: false);
+
+        Assert.True(updated);
+        Assert.Equal("/amdcpu/0/temperature/2", manager.GetDialMetric("dial-2"));
+        Assert.Equal(15f, manager.GetDialMin("dial-2"));
+        Assert.Equal(85f, manager.GetDialMax("dial-2"));
+
+        List<ClassDialThreshold> thresholds = manager.GetDialThresholds("dial-2");
+        Assert.Single(thresholds);
+        Assert.Equal(75, thresholds[0].Threshold);
+        Assert.Equal(4, thresholds[0].BacklightRed);
+        Assert.Equal(5, thresholds[0].BacklightGreen);
+        Assert.Equal(6, thresholds[0].BacklightBlue);
+    }
+
     public void Dispose()
     {
         if (!Directory.Exists(_configDirectory))

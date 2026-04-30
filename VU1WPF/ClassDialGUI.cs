@@ -67,6 +67,29 @@ namespace VU1WPF
             set { gSensorName = value; }
         }
 
+        public string ConfiguredSensorIdentifier
+        {
+            get
+            {
+                if (gSensor != null)
+                {
+                    return gSensor.Identifier.ToString();
+                }
+
+                if (!String.IsNullOrWhiteSpace(gSensorIdentifier))
+                {
+                    return gSensorIdentifier;
+                }
+
+                return gMetric;
+            }
+        }
+
+        public bool HasConfiguredSensorBinding
+        {
+            get { return !String.IsNullOrWhiteSpace(ConfiguredSensorIdentifier); }
+        }
+
         public ISensor? Sensor
         {
             get { return gSensor; }

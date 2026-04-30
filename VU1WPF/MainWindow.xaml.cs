@@ -158,13 +158,25 @@ namespace VU1WPF
             }
             else
             {
-                lblCurrentMetric.Content = "";
+                if (gCurrentlySelectedDial.HasConfiguredSensorBinding)
+                {
+                    lblCurrentMetric.Content = $"Unavailable - {gCurrentlySelectedDial.ConfiguredSensorIdentifier}";
+                    lblScalingMin.Content = gCurrentlySelectedDial.ScaleMin.ToString(CultureInfo.InvariantCulture);
+                    lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
+                    txtMinValue.Text = gCurrentlySelectedDial.ScaleMin.ToString(CultureInfo.InvariantCulture);
+                    txtMaxValue.Text = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    lblCurrentMetric.Content = "";
+                    lblScalingMin.Content = "";
+                    lblScalingMax.Content = "";
+                    txtMinValue.Text = "0";
+                    txtMaxValue.Text = "100";
+                }
+
                 lblCurrentValue.Content = "";
                 lblCurrentPercent.Content = "";
-                lblScalingMin.Content = "";
-                lblScalingMax.Content = "";
-                txtMinValue.Text = "0";
-                txtMaxValue.Text = "100";
             }
             
         }
@@ -180,6 +192,12 @@ namespace VU1WPF
             float sensorMax = ConfigManager.GetDialMax(UID);
             List<ClassDialThreshold> thresholds = ConfigManager.GetDialThresholds(UID);
 
+            tmpDial.SensorIdentifier = sensorIdentifier;
+            tmpDial.Metric = sensorIdentifier;
+            tmpDial.ScaleMin = sensorMin;
+            tmpDial.ScaleMax = sensorMax;
+            tmpDial.Thresholds = thresholds;
+
             if (sensorIdentifier != "")
             {
                 VU1_Sensor? tmpSensor = SensorManager.FindSensorByIdentifier(sensorIdentifier);
@@ -188,9 +206,6 @@ namespace VU1WPF
                     tmpDial.Sensor = tmpSensor.Sensor;
                     tmpDial.SensorIdentifier = tmpSensor.Sensor.Identifier.ToString();
                     tmpDial.SensorName = tmpSensor.Sensor.Name.ToString();
-                    tmpDial.ScaleMin = sensorMin;
-                    tmpDial.ScaleMax = sensorMax;
-                    tmpDial.Thresholds = thresholds;
                 }
             }
             return tmpDial;
@@ -293,7 +308,7 @@ namespace VU1WPF
             // Update config/UI only if:
             // - valid sensor is selected from the drop-down
             // - valud sensor is stored in config, then update only scaling values
-            if (cbDialMetric.SelectedItem != null || gCurrentlySelectedDial.Sensor != null)
+            if (cbDialMetric.SelectedItem != null || gCurrentlySelectedDial.HasConfiguredSensorBinding)
             {
                 // New sensor is selected
                 if (cbDialMetric.SelectedItem != null)
@@ -304,6 +319,9 @@ namespace VU1WPF
                     {
                         var sensorNode = selectedSensor.Sensor;
                         gCurrentlySelectedDial.Sensor = sensorNode;
+                        gCurrentlySelectedDial.SensorIdentifier = sensorNode.Identifier.ToString();
+                        gCurrentlySelectedDial.SensorName = sensorNode.Name.ToString();
+                        gCurrentlySelectedDial.Metric = sensorNode.Identifier.ToString();
                         lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", sensorNode.Name.ToString(), sensorNode.SensorType.ToString(), sensorNode.Identifier.ToString());
                     }
                 }
