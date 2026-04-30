@@ -31,6 +31,20 @@ namespace VU1WPF
             return (int)Math.Round(scaledValue);
         }
 
+        public static bool AreScalingBoundsValid(float scaleMin, float scaleMax, out string reason)
+        {
+            if (scaleMin >= scaleMax)
+            {
+                reason = scaleMin == scaleMax
+                    ? "Min and Max must not be equal"
+                    : "Min must be less than Max";
+                return false;
+            }
+
+            reason = String.Empty;
+            return true;
+        }
+
         public static ClassDialThreshold? ResolveThresholdColor(List<ClassDialThreshold>? thresholds, int dialValue)
         {
             if (thresholds == null || thresholds.Count == 0)

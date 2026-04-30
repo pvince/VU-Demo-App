@@ -150,8 +150,8 @@
                     <RowDefinition Height="40" />
                     <RowDefinition Height="40" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="40" />
-                    <RowDefinition Height="10" />
                 </Grid.RowDefinitions>
 
                 <Label Grid.Row="0" Content="Configure dial" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -193,6 +193,27 @@
                 <Label Grid.Row="8" Content="Max: " Height="25" Width="100" HorizontalAlignment="Left" />
                 <Label Grid.Row="8" x:Name="lblScalingMax" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
 
+                <Border Grid.Row="9"
+                        x:Name="brdMetricStatus"
+                        Margin="120,6,0,6"
+                        Padding="8,4"
+                        HorizontalAlignment="Left"
+                        Width="390"
+                        CornerRadius="4"
+                        Background="#FFF0F0F0"
+                        BorderBrush="#FFCFCFCF"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon x:Name="icoMetricStatus" Kind="Information" Width="14" Height="14" Margin="0,0,6,0" Foreground="#FF606060"/>
+                        <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
+                        <TextBlock x:Name="txtMetricStatus" Text="Not configured" Margin="5,0,10,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#FF3A3A3A"/>
+                        <TextBlock Text="Updated:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
+                        <TextBlock x:Name="txtMetricLastUpdate" Text="-" Margin="5,0,10,0" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
+                        <TextBlock Text="Last valid:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
+                        <TextBlock x:Name="txtMetricLastValid" Text="n/a" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
+                    </StackPanel>
+                </Border>
+
                 <Label Grid.Row="10" Content="Metric Type" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <ComboBox Grid.Row="10" x:Name="cbDialMetricCategory" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}"  SelectionChanged="cbDialMetricCategory_SelectionChanged">
                     <ComboBox.ItemTemplate>
@@ -228,6 +249,24 @@
 
                 <Label Grid.Row="13" Content="Metric Max" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBox Grid.Row="13" x:Name="txtMaxValue" TextWrapping="Wrap" Text="100" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 100%" PreviewTextInput="NumericTextBoxInput" />
+
+                <Border Grid.Row="14"
+                        x:Name="brdScalingValidation"
+                        Margin="120,4,0,0"
+                        Padding="8,5"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Width="270"
+                        CornerRadius="4"
+                        Background="#FFFFEAEA"
+                        BorderBrush="#FFCC0000"
+                        BorderThickness="1"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="AlertCircle" Width="14" Height="14" Margin="0,0,6,0" Foreground="#FFCC0000"/>
+                        <TextBlock x:Name="txtScalingValidationError" Text="" VerticalAlignment="Center" Foreground="#FF990000" FontSize="11"/>
+                    </StackPanel>
+                </Border>
 
                 <Button Grid.Row="15" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click"/>
                 <Button Grid.Row="15" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click"/>

@@ -30,6 +30,7 @@ namespace VU1WPF
         private readonly DialUpdateOrchestrator gDialUpdateOrchestrator = new DialUpdateOrchestrator();
         public List<ClassDialGUI> gDials = new List<ClassDialGUI>();
         public ClassDialGUI gCurrentlySelectedDial = new ClassDialGUI { FriendlyName = "", UID = "" };
+        private float? gLastValidMetricValue;
         bool gDialUpdatePaused = false;
         const String VU1_Registry_Key = "VU1-Demo-App";
         const String VU1_Registry_Path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
@@ -150,6 +151,7 @@ namespace VU1WPF
 
         private void UpdateSelectedDialDisplay()
         {
+            HideScalingValidationError();
             var currentSensor = gCurrentlySelectedDial.Sensor;
 
             if (currentSensor != null)
@@ -162,6 +164,7 @@ namespace VU1WPF
                 txtMaxValue.Text = gCurrentlySelectedDial.ScaleMax.ToString();
 
                 lblCurrentValue.Content = currentSensor.Value?.ToString() ?? "";
+                SetMetricStatusForCurrentSensor(currentSensor);
                 brdSensorUnavailable.Visibility = Visibility.Collapsed;
                 txtUnavailableSensorMessage.Text = String.Empty;
             }
@@ -174,6 +177,7 @@ namespace VU1WPF
                     lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
                     txtMinValue.Text = gCurrentlySelectedDial.ScaleMin.ToString(CultureInfo.InvariantCulture);
                     txtMaxValue.Text = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
+                    SetMetricStatusUnavailable("Binding needs repair");
                     brdSensorUnavailable.Visibility = Visibility.Visible;
                     txtUnavailableSensorMessage.Text = $"Sensor unavailable. The saved binding is still preserved so you can recover it later: {gCurrentlySelectedDial.ConfiguredSensorIdentifier}";
                 }
@@ -184,6 +188,7 @@ namespace VU1WPF
                     lblScalingMax.Content = "";
                     txtMinValue.Text = "0";
                     txtMaxValue.Text = "100";
+                    SetMetricStatusNotConfigured();
                     brdSensorUnavailable.Visibility = Visibility.Collapsed;
                     txtUnavailableSensorMessage.Text = String.Empty;
                 }
@@ -191,6 +196,73 @@ namespace VU1WPF
                 lblCurrentValue.Content = "";
                 lblCurrentPercent.Content = "";
             }
+        }
+
+        private static string GetStatusTimestamp()
+        {
+            return DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+        }
+
+        private void SetMetricStatusAvailable(float value)
+        {
+            gLastValidMetricValue = value;
+            txtMetricStatus.Text = "Live";
+            txtMetricLastUpdate.Text = GetStatusTimestamp();
+            txtMetricLastValid.Text = value.ToString("0.000", CultureInfo.InvariantCulture);
+            icoMetricStatus.Kind = PackIconKind.CheckCircle;
+            icoMetricStatus.Foreground = System.Windows.Media.Brushes.ForestGreen;
+            brdMetricStatus.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 231, 246, 235));
+            brdMetricStatus.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 113, 179, 124));
+        }
+
+        private void SetMetricStatusUnavailable(string reason)
+        {
+            txtMetricStatus.Text = reason;
+            txtMetricLastUpdate.Text = GetStatusTimestamp();
+            txtMetricLastValid.Text = gLastValidMetricValue.HasValue
+                ? gLastValidMetricValue.Value.ToString("0.000", CultureInfo.InvariantCulture)
+                : "n/a";
+            icoMetricStatus.Kind = PackIconKind.AlertCircle;
+            icoMetricStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 154, 103, 0));
+            brdMetricStatus.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 253, 231, 194));
+            brdMetricStatus.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 224, 122, 0));
+        }
+
+        private void ShowScalingValidationError(string message)
+        {
+            txtScalingValidationError.Text = message;
+            brdScalingValidation.Visibility = Visibility.Visible;
+        }
+
+        private void HideScalingValidationError()
+        {
+            brdScalingValidation.Visibility = Visibility.Collapsed;
+            txtScalingValidationError.Text = String.Empty;
+        }
+
+        private void SetMetricStatusNotConfigured()
+        {
+            txtMetricStatus.Text = "Not configured";
+            txtMetricLastUpdate.Text = "-";
+            txtMetricLastValid.Text = gLastValidMetricValue.HasValue
+                ? gLastValidMetricValue.Value.ToString("0.000", CultureInfo.InvariantCulture)
+                : "n/a";
+            icoMetricStatus.Kind = PackIconKind.Information;
+            icoMetricStatus.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 96, 96, 96));
+            brdMetricStatus.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 240, 240, 240));
+            brdMetricStatus.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 207, 207, 207));
+        }
+
+        private void SetMetricStatusForCurrentSensor(LibreHardwareMonitor.Hardware.ISensor sensor)
+        {
+            float? value = sensor.Value;
+            if (!value.HasValue || float.IsNaN(value.Value) || float.IsInfinity(value.Value))
+            {
+                SetMetricStatusUnavailable("No live reading");
+                return;
+            }
+
+            SetMetricStatusAvailable(value.Value);
         }
 
         private ClassDialGUI CreateGUIDial(String UID, String FriendlyName)
@@ -303,7 +375,15 @@ namespace VU1WPF
                 minValue = maxValue;
                 maxValue = tpm;
             }
-            
+
+            if (!DialComputationEngine.AreScalingBoundsValid(minValue, maxValue, out string scalingError))
+            {
+                ShowScalingValidationError(scalingError);
+                return;
+            }
+
+            HideScalingValidationError();
+
             // Update currently selected sensor
             gCurrentlySelectedDial.FriendlyName = newName;
             gCurrentlySelectedDial.ScaleMin = minValue;
@@ -561,9 +641,33 @@ namespace VU1WPF
 
                 float fSensorValue = await Task.Run(() =>
                 {
-                    sensor.Hardware.Update();
-                    return sensor.Value ?? 0;
+                    SensorReadingResult reading = MetricPollingService.ReadSensorValue(sensor);
+                    if (reading.Status == SensorReadingStatus.Available && reading.Value.HasValue)
+                    {
+                        return reading.Value.Value;
+                    }
+
+                    return float.NaN;
                 }).ConfigureAwait(false);
+
+                if (float.IsNaN(fSensorValue) || float.IsInfinity(fSensorValue))
+                {
+                    string selectedSensorIdentifierUnavailable = gCurrentlySelectedDial.ConfiguredSensorIdentifier;
+                    string dialSensorIdentifierUnavailable = sensor.Identifier.ToString();
+
+                    if (selectedSensorIdentifierUnavailable == dialSensorIdentifierUnavailable)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            lblCurrentPercent.Content = "--";
+                            lblCurrentValue.Content = "[n/a]";
+                            SetMetricStatusUnavailable("No live reading");
+                        });
+                    }
+
+                    Log.Warning("Skipping dial update due to unavailable metric reading. Dial: {DialUid}, Sensor: {SensorIdentifier}", dial.UID, dialSensorIdentifierUnavailable);
+                    return;
+                }
 
                 dialValue = DialComputationEngine.ComputeDialValuePercent(dial.ScaleMin, dial.ScaleMax, fSensorValue);
 
@@ -582,7 +686,7 @@ namespace VU1WPF
                 }
 
 
-                string selectedSensorIdentifier = gCurrentlySelectedDial.Sensor?.Identifier.ToString() ?? String.Empty;
+                string selectedSensorIdentifier = gCurrentlySelectedDial.ConfiguredSensorIdentifier;
                 string dialSensorIdentifier = sensor.Identifier.ToString();
 
                 Log.Verbose(String.Format("Dial:{0} set to {1}% [Sensor: {2}] - Raw value: {3}", dial.UID, dialValue, sensor.Identifier, fSensorValue));
@@ -599,6 +703,7 @@ namespace VU1WPF
                     {
                         lblCurrentPercent.Content = String.Format("{0}%", dialValue);
                         lblCurrentValue.Content = String.Format("[{0:0.000}]", fSensorValue);
+                        SetMetricStatusAvailable(fSensorValue);
                     });
                 }
             }
