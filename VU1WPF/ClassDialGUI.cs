@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace VU1WPF
 {
+    public enum SensorBindingStatus
+    {
+        NotConfigured,
+        Available,
+        Unavailable
+    }
+
     public class ClassDialGUI
     {
         private string gFriendlyName = "";
@@ -88,6 +95,29 @@ namespace VU1WPF
         public bool HasConfiguredSensorBinding
         {
             get { return !String.IsNullOrWhiteSpace(ConfiguredSensorIdentifier); }
+        }
+
+        public SensorBindingStatus SensorStatus
+        {
+            get
+            {
+                if (gSensor != null)
+                {
+                    return SensorBindingStatus.Available;
+                }
+
+                if (HasConfiguredSensorBinding)
+                {
+                    return SensorBindingStatus.Unavailable;
+                }
+
+                return SensorBindingStatus.NotConfigured;
+            }
+        }
+
+        public bool HasUnavailableSensorBinding
+        {
+            get { return SensorStatus == SensorBindingStatus.Unavailable; }
         }
 
         public ISensor? Sensor

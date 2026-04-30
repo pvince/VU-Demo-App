@@ -10,6 +10,9 @@
         xmlns:local="clr-namespace:VU1WPF"
         mc:Ignorable="d"
         Title="VU1 - Companion App" Height="660" Width="800" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" WindowStyle="None" Closing="mainWindow_Closing">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Grid HorizontalAlignment="Right" Width="800">
 
 
@@ -50,10 +53,26 @@
                 <ListBox x:Name="lbDials" d:ItemsSource="{d:SampleData ItemCount=5}" SelectionChanged="lbDials_SelectionChanged" Canvas.Top="32" Height="410" Width="230" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,52,0,0" Background="#00000000" Style="{DynamicResource MaterialDesignListBox}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding FriendlyName}"/>
-                                <TextBlock Text="{Binding UID}"/>
-                            </StackPanel>
+                            <Grid Margin="0,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon Grid.Column="0"
+                                                         Kind="Alert"
+                                                         Width="16"
+                                                         Height="16"
+                                                         VerticalAlignment="Top"
+                                                         Foreground="#FFE07A00"
+                                                         ToolTip="{Binding ConfiguredSensorIdentifier}"
+                                                         Visibility="{Binding HasUnavailableSensorBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding FriendlyName}"/>
+                                    <TextBlock Text="{Binding UID}"/>
+                                </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
@@ -122,10 +141,10 @@
                     <RowDefinition Height="30" />
                     <RowDefinition Height="30" />
                     <RowDefinition Height="30" />
+                    <RowDefinition Height="56" />
                     <RowDefinition Height="30" />
                     <RowDefinition Height="30" />
                     <RowDefinition Height="30" />
-                    <RowDefinition Height="*" />
                     <RowDefinition Height="40" />
                     <RowDefinition Height="40" />
                     <RowDefinition Height="40" />
@@ -146,18 +165,36 @@
                 <Label Grid.Row="4" Content="Metric:" Height="25" Width="100" HorizontalAlignment="Left" />
                 <Label Grid.Row="4" x:Name="lblCurrentMetric" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="390" Margin="120,0,0,0" Content=""/>
 
-                <Label Grid.Row="5" Content="Value:" Height="25" Width="100" HorizontalAlignment="Left" />
-                <Label Grid.Row="5" x:Name="lblCurrentPercent" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" Content=""/>
-                <Label Grid.Row="5" x:Name="lblCurrentValue" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="180,0,0,0" Content=""/>
+                <Border Grid.Row="5"
+                        x:Name="brdSensorUnavailable"
+                        Margin="120,4,0,6"
+                        Padding="10,8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Width="390"
+                        CornerRadius="4"
+                        Background="#FFFDE7C2"
+                        BorderBrush="#FFE07A00"
+                        BorderThickness="1"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AlertCircle" Width="18" Height="18" Margin="0,0,8,0" Foreground="#FF9A6700"/>
+                        <TextBlock x:Name="txtUnavailableSensorMessage" TextWrapping="Wrap" Width="344" Foreground="#FF7A4A00"/>
+                    </StackPanel>
+                </Border>
 
-                <Label Grid.Row="6" Content="Min:" Height="25" Width="100" HorizontalAlignment="Left" />
-                <Label Grid.Row="6" x:Name="lblScalingMin" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
+                <Label Grid.Row="6" Content="Value:" Height="25" Width="100" HorizontalAlignment="Left" />
+                <Label Grid.Row="6" x:Name="lblCurrentPercent" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" Content=""/>
+                <Label Grid.Row="6" x:Name="lblCurrentValue" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="180,0,0,0" Content=""/>
 
-                <Label Grid.Row="7" Content="Max: " Height="25" Width="100" HorizontalAlignment="Left" />
-                <Label Grid.Row="7" x:Name="lblScalingMax" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
+                <Label Grid.Row="7" Content="Min:" Height="25" Width="100" HorizontalAlignment="Left" />
+                <Label Grid.Row="7" x:Name="lblScalingMin" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
 
-                <Label Grid.Row="9" Content="Metric Type" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <ComboBox Grid.Row="9" x:Name="cbDialMetricCategory" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}"  SelectionChanged="cbDialMetricCategory_SelectionChanged">
+                <Label Grid.Row="8" Content="Max: " Height="25" Width="100" HorizontalAlignment="Left" />
+                <Label Grid.Row="8" x:Name="lblScalingMax" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
+
+                <Label Grid.Row="10" Content="Metric Type" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="10" x:Name="cbDialMetricCategory" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}"  SelectionChanged="cbDialMetricCategory_SelectionChanged">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
@@ -167,8 +204,8 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="10" Content="Selected Metric" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <ComboBox Grid.Row="10" x:Name="cbDialMetric" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}">
+                <Label Grid.Row="11" Content="Selected Metric" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="11" x:Name="cbDialMetric" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
@@ -184,18 +221,18 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button Grid.Row="10" x:Name="btnSave" Content="Save dial config" Width="140" Height="32" HorizontalAlignment="Left" Margin="370,4,0,4" ToolTip="Save dial settings" Click="btnSaveDialSettings_click"/>
+                <Button Grid.Row="11" x:Name="btnSave" Content="Save dial config" Width="140" Height="32" HorizontalAlignment="Left" Margin="370,4,0,4" ToolTip="Save dial settings" Click="btnSaveDialSettings_click"/>
 
-                <Label Grid.Row="11" Content="Metric Min" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBox Grid.Row="11" x:Name="txtMinValue" TextWrapping="Wrap" Text="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 0%" PreviewTextInput="NumericTextBoxInput" />
+                <Label Grid.Row="12" Content="Metric Min" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="12" x:Name="txtMinValue" TextWrapping="Wrap" Text="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 0%" PreviewTextInput="NumericTextBoxInput" />
 
-                <Label Grid.Row="12" Content="Metric Max" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBox Grid.Row="12" x:Name="txtMaxValue" TextWrapping="Wrap" Text="100" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 100%" PreviewTextInput="NumericTextBoxInput" />
+                <Label Grid.Row="13" Content="Metric Max" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="13" x:Name="txtMaxValue" TextWrapping="Wrap" Text="100" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 100%" PreviewTextInput="NumericTextBoxInput" />
 
-                <Button Grid.Row="14" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click"/>
-                <Button Grid.Row="14" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click"/>
-                <Button Grid.Row="14" x:Name="btnChangeColor" Content="Set color" Width="120" Height="32" HorizontalAlignment="Left" Margin="270, 0, 0, 0" ToolTip="Manually change dial background color" Click="btnChangeDialColor_click"/>
-                <Button Grid.Row="14" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click"/>
+                <Button Grid.Row="15" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click"/>
+                <Button Grid.Row="15" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click"/>
+                <Button Grid.Row="15" x:Name="btnChangeColor" Content="Set color" Width="120" Height="32" HorizontalAlignment="Left" Margin="270, 0, 0, 0" ToolTip="Manually change dial background color" Click="btnChangeDialColor_click"/>
+                <Button Grid.Row="15" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click"/>
             </Grid>
         </Canvas>
 

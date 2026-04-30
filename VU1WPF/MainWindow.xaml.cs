@@ -142,10 +142,16 @@ namespace VU1WPF
             }
 
             gCurrentlySelectedDial = sel;
-            var currentSensor = gCurrentlySelectedDial.Sensor;
-
             txtlSelectedDialName.Text = sel.FriendlyName.ToString();
             lblSelectedDialUID.Content = sel.UID.ToString();
+
+            UpdateSelectedDialDisplay();
+        }
+
+        private void UpdateSelectedDialDisplay()
+        {
+            var currentSensor = gCurrentlySelectedDial.Sensor;
+
             if (currentSensor != null)
             {
                 lblCurrentMetric.Content = String.Format("{0} - {1} - {2}", currentSensor.Name.ToString(), currentSensor.SensorType.ToString(), currentSensor.Identifier.ToString());
@@ -154,7 +160,10 @@ namespace VU1WPF
                 lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString();
                 txtMinValue.Text = gCurrentlySelectedDial.ScaleMin.ToString();
                 txtMaxValue.Text = gCurrentlySelectedDial.ScaleMax.ToString();
-                
+
+                lblCurrentValue.Content = currentSensor.Value?.ToString() ?? "";
+                brdSensorUnavailable.Visibility = Visibility.Collapsed;
+                txtUnavailableSensorMessage.Text = String.Empty;
             }
             else
             {
@@ -165,6 +174,8 @@ namespace VU1WPF
                     lblScalingMax.Content = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
                     txtMinValue.Text = gCurrentlySelectedDial.ScaleMin.ToString(CultureInfo.InvariantCulture);
                     txtMaxValue.Text = gCurrentlySelectedDial.ScaleMax.ToString(CultureInfo.InvariantCulture);
+                    brdSensorUnavailable.Visibility = Visibility.Visible;
+                    txtUnavailableSensorMessage.Text = $"Sensor unavailable. The saved binding is still preserved so you can recover it later: {gCurrentlySelectedDial.ConfiguredSensorIdentifier}";
                 }
                 else
                 {
@@ -173,12 +184,13 @@ namespace VU1WPF
                     lblScalingMax.Content = "";
                     txtMinValue.Text = "0";
                     txtMaxValue.Text = "100";
+                    brdSensorUnavailable.Visibility = Visibility.Collapsed;
+                    txtUnavailableSensorMessage.Text = String.Empty;
                 }
 
                 lblCurrentValue.Content = "";
                 lblCurrentPercent.Content = "";
             }
-            
         }
 
         private ClassDialGUI CreateGUIDial(String UID, String FriendlyName)
@@ -332,6 +344,8 @@ namespace VU1WPF
 
                 // Update config file
                 ConfigManager.UpdateDialConfig(gCurrentlySelectedDial, true);
+                UpdateSelectedDialDisplay();
+                lbDials.Items.Refresh();
             }
             
         }
