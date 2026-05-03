@@ -5,7 +5,7 @@ using Xunit;
 namespace VU1WPF.Tests.UI;
 
 [Collection(FlaUiAppCollection.Name)]
-public sealed class ModalSmokeTests
+public sealed class ModalSmokeTests : IClassFixture<FlaUiAppFixture>
 {
     private readonly FlaUiAppFixture _fixture;
 

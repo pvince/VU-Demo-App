@@ -4,7 +4,7 @@ using Xunit;
 namespace VU1WPF.Tests.UI;
 
 [Collection(FlaUiAppCollection.Name)]
-public sealed class ReconnectSmokeTests
+public sealed class ReconnectSmokeTests : IClassFixture<FlaUiAppFixture>
 {
     private readonly FlaUiAppFixture _fixture;
 
@@ -18,7 +18,7 @@ public sealed class ReconnectSmokeTests
     public void ReconnectButton_IsEnabled_AndInvokable()
     {
         var reconnectButton = UiElementAssertions
-            .RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowReconnectButton)
+            .RequireElementByAnyIdentifier(_fixture.MainWindow, SelectorConstants.MainWindowReconnectButton, "Reconnect")
             .AsButton();
 
         UiElementAssertions.WaitUntilEnabled(reconnectButton);

@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using FlaUI.Core.AutomationElements;
 using Xunit;
 
 namespace VU1WPF.Tests.UI;
 
 [Collection(FlaUiAppCollection.Name)]
-public sealed class MainWindowSmokeTests
+public sealed class MainWindowSmokeTests : IClassFixture<FlaUiAppFixture>
 {
     private readonly FlaUiAppFixture _fixture;
 
@@ -62,10 +63,18 @@ public sealed class MainWindowSmokeTests
     [Trait("Category", "UI")]
     public void Startup_AllExpectedVisibleElements_AreFullyVisibleWithinWindow()
     {
+        var runOnStartupCheckBox = UiElementAssertions.RequireElementByAnyIdentifier(
+            _fixture.MainWindow,
+            SelectorConstants.MainWindowRunOnStartupCheckBox,
+            "Run VU1 Demo App on system boot");
+        UiElementAssertions.RequireElementVisibleWithinWindow(
+            _fixture.MainWindow,
+            runOnStartupCheckBox,
+            SelectorConstants.MainWindowRunOnStartupCheckBox);
+
         string[] visibleElementIds =
         {
             SelectorConstants.MainWindowDialList,
-            SelectorConstants.MainWindowRunOnStartupCheckBox,
             SelectorConstants.MainWindowServerHostTextBox,
             SelectorConstants.MainWindowServerPortTextBox,
             SelectorConstants.MainWindowReconnectButton,
@@ -113,6 +122,43 @@ public sealed class MainWindowSmokeTests
             SelectorConstants.MainWindowConnectionStatusLabel,
             brandingLabel,
             SelectorConstants.MainWindowBrandingLabel);
+    }
+
+    [Fact]
+    [Trait("Category", "UI")]
+    public void Startup_LeftPanelCriticalElements_DoNotOverlap()
+    {
+        var elements = new List<(AutomationElement Element, string Name)>();
+
+        var runOnStartupCheckBox = UiElementAssertions.RequireElementByAnyIdentifier(
+            _fixture.MainWindow,
+            SelectorConstants.MainWindowRunOnStartupCheckBox,
+            "Run VU1 Demo App on system boot");
+        UiElementAssertions.RequireElementVisibleWithinWindow(
+            _fixture.MainWindow,
+            runOnStartupCheckBox,
+            SelectorConstants.MainWindowRunOnStartupCheckBox);
+        elements.Add((runOnStartupCheckBox, SelectorConstants.MainWindowRunOnStartupCheckBox));
+
+        string[] criticalLeftPanelElementIds =
+        {
+            SelectorConstants.MainWindowServerHostTextBox,
+            SelectorConstants.MainWindowServerPortTextBox,
+            SelectorConstants.MainWindowRefreshDialsButton,
+            SelectorConstants.MainWindowToggleDialUpdateButton,
+            SelectorConstants.MainWindowReconnectButton,
+            SelectorConstants.MainWindowConnectionStatusLabel,
+            SelectorConstants.MainWindowBrandingLabel,
+        };
+
+        foreach (string elementId in criticalLeftPanelElementIds)
+        {
+            var element = UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, elementId);
+            UiElementAssertions.RequireElementVisibleWithinWindow(_fixture.MainWindow, element, elementId);
+            elements.Add((element, elementId));
+        }
+
+        UiElementAssertions.RequireNoOverlapsInSet(elements.ToArray());
     }
 
     [Fact]

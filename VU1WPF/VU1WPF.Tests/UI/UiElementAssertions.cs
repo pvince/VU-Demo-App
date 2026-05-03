@@ -16,6 +16,7 @@ internal static class SelectorConstants
     public const string MainWindowToggleDialUpdateButton = "MainWindow_ToggleDialUpdate_Button";
     public const string MainWindowServerHostTextBox = "MainWindow_ServerHost_TextBox";
     public const string MainWindowServerPortTextBox = "MainWindow_ServerPort_TextBox";
+    public const string MainWindowServerSettingsPanel = "MainWindow_ServerSettings_Panel";
     public const string MainWindowReconnectButton = "MainWindow_Reconnect_Button";
     public const string MainWindowConnectionStatusLabel = "MainWindow_ConnectionStatus_Label";
     public const string MainWindowSaveDialConfigButton = "MainWindow_SaveDialConfig_Button";
@@ -65,6 +66,33 @@ internal static class UiElementAssertions
             ignoreException: true);
 
         Assert.True(result.Success && result.Result is not null, $"Missing UI element by AutomationId or Name '{identifier}'.");
+        return result.Result!;
+    }
+
+    public static AutomationElement RequireElementByAnyIdentifier(Window window, params string[] identifiers)
+    {
+        var result = Retry.WhileNull(
+            () =>
+            {
+                foreach (string identifier in identifiers)
+                {
+                    var element = window.FindFirstDescendant(cf => cf.ByAutomationId(identifier))
+                        ?? window.FindFirstDescendant(cf => cf.ByName(identifier));
+
+                    if (element is not null)
+                    {
+                        return element;
+                    }
+                }
+
+                return null;
+            },
+            timeout: TimeSpan.FromSeconds(20),
+            interval: TimeSpan.FromMilliseconds(100),
+            throwOnTimeout: false,
+            ignoreException: true);
+
+        Assert.True(result.Success && result.Result is not null, $"Missing UI element by any identifier: {string.Join(", ", identifiers)}.");
         return result.Result!;
     }
 
@@ -133,6 +161,21 @@ internal static class UiElementAssertions
             && firstRect.Bottom > secondRect.Top;
 
         Assert.False(overlaps, $"Elements '{firstName}' and '{secondName}' overlap.");
+    }
+
+    public static void RequireNoOverlapsInSet((AutomationElement Element, string Name)[] elements)
+    {
+        for (int i = 0; i < elements.Length; i++)
+        {
+            for (int j = i + 1; j < elements.Length; j++)
+            {
+                RequireElementsDoNotOverlap(
+                    elements[i].Element,
+                    elements[i].Name,
+                    elements[j].Element,
+                    elements[j].Name);
+            }
+        }
     }
 
     public static Window RequireTopLevelWindowByTitle(FlaUiAppFixture fixture, string title, TimeSpan? timeout = null)
