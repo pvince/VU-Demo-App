@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using FlaUI.Core.AutomationElements;
 using Xunit;
 
 namespace VU1WPF.Tests.UI;
@@ -23,21 +23,37 @@ public sealed class MainWindowSmokeTests
 
     [Fact]
     [Trait("Category", "UI")]
-    public void Startup_MainWindowHasAutomationDescendants()
+    public void Startup_FindsCoreControlsByAutomationId()
     {
-        int descendantCount = _fixture.MainWindow.FindAllDescendants().Length;
-
-        Assert.True(descendantCount > 0, "Expected main window automation tree to contain descendants.");
+        UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowDialList);
+        UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowServerHostTextBox);
+        UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowServerPortTextBox);
+        UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowReconnectButton);
+        UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowAboutButton);
     }
 
     [Fact]
     [Trait("Category", "UI")]
-    public void Startup_AppProcessIsRunning_AndHasTopLevelWindow()
+    public void Startup_ServerFieldsAcceptInput()
+    {
+        var hostTextBox = UiElementAssertions
+            .RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowServerHostTextBox)
+            .AsTextBox();
+        var portTextBox = UiElementAssertions
+            .RequireElementByAutomationIdOnly(_fixture.MainWindow, SelectorConstants.MainWindowServerPortTextBox)
+            .AsTextBox();
+
+        hostTextBox.Text = "localhost";
+        portTextBox.Text = "5340";
+
+        Assert.Equal("localhost", hostTextBox.Text);
+        Assert.Equal("5340", portTextBox.Text);
+    }
+
+    [Fact]
+    [Trait("Category", "UI")]
+    public void Startup_MainWindowProcessIsRunning()
     {
         Assert.False(_fixture.App.HasExited);
-
-        var topLevelWindows = _fixture.App.GetAllTopLevelWindows(_fixture.Automation);
-
-        Assert.True(topLevelWindows.Any(), "Expected at least one top-level window for the launched app.");
     }
 }

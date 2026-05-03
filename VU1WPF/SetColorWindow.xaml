@@ -8,17 +8,17 @@
         ResizeMode="NoResize" 
         Title="Set Dial Backlight Color" Height="320" Width="420" WindowStartupLocation="CenterOwner">
     <Grid>
-        <Slider x:Name="sliderRed" HorizontalAlignment="Left" Margin="97,24,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderRed" HorizontalAlignment="Left" Margin="97,24,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="SetColorDialog_Red_Slider" />
         <Label Content="Red" HorizontalAlignment="Left" Margin="21,20,0,0" VerticalAlignment="Top"/>
 
-        <Slider x:Name="sliderGreen" HorizontalAlignment="Left" Margin="97,65,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderGreen" HorizontalAlignment="Left" Margin="97,65,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="SetColorDialog_Green_Slider" />
         <Label Content="Green" HorizontalAlignment="Left" Margin="21,61,0,0" VerticalAlignment="Top"/>
 
-        <Slider x:Name="sliderBlue" HorizontalAlignment="Left" Margin="97,104,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderBlue" HorizontalAlignment="Left" Margin="97,104,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="SetColorDialog_Blue_Slider" />
         <Label Content="Blue" HorizontalAlignment="Left" Margin="21,100,0,0" VerticalAlignment="Top"/>
 
 
-        <ComboBox x:Name="cbPreset" HorizontalAlignment="Left" Margin="97,152,0,0" VerticalAlignment="Top" Width="279" ItemsSource="{Binding Path=backlightPresets}" SelectionChanged="cbBacklightPreset_SelectionChanged">
+        <ComboBox x:Name="cbPreset" HorizontalAlignment="Left" Margin="97,152,0,0" VerticalAlignment="Top" Width="279" ItemsSource="{Binding Path=backlightPresets}" SelectionChanged="cbBacklightPreset_SelectionChanged" AutomationProperties.AutomationId="SetColorDialog_Preset_ComboBox">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}"/>
@@ -27,7 +27,7 @@
         </ComboBox>
         <Label Content="Preset" HorizontalAlignment="Left" Margin="21,153,0,0" VerticalAlignment="Top"/>
 
-        <Button x:Name="btnSetColor" Content="Set Color" HorizontalAlignment="Left" Margin="146,229,0,0" VerticalAlignment="Top" Click="btnSetColor_click" />
+        <Button x:Name="btnSetColor" Content="Set Color" HorizontalAlignment="Left" Margin="146,229,0,0" VerticalAlignment="Top" Click="btnSetColor_click" AutomationProperties.AutomationId="SetColorDialog_Apply_Button" />
 
 
     </Grid>

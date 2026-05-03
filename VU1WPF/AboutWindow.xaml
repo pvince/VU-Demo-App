@@ -33,9 +33,9 @@
                     You can find more information at https://vudials.com
             </TextBlock>
 
-            <TextBlock Grid.Row="4" x:Name="txtBuildStamp" HorizontalAlignment="Left" Margin="26,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="542" FontSize="10" >Demo app version v2024-01-09</TextBlock>
+            <TextBlock Grid.Row="4" x:Name="txtBuildStamp" HorizontalAlignment="Left" Margin="26,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="542" FontSize="10" AutomationProperties.AutomationId="AboutDialog_BuildStamp_Text" >Demo app version v2024-01-09</TextBlock>
 
-            <Button Grid.Row="5" x:Name="btnClose" Content="Close" Width="120" Height="32" HorizontalAlignment="Center" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnCloseWindow"/>
+            <Button Grid.Row="5" x:Name="btnClose" Content="Close" Width="120" Height="32" HorizontalAlignment="Center" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnCloseWindow" AutomationProperties.AutomationId="AboutDialog_Close_Button"/>
 
 
         </Grid>

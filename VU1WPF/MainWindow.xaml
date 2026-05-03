@@ -17,15 +17,15 @@
 
 
         <!-- Title bar canvas -->
-        <Canvas x:Name="cnvsTitleCanvas" Margin="0,0,0,379">
+        <Canvas x:Name="cnvsTitleCanvas" Margin="0,0,0,379" AutomationProperties.AutomationId="MainWindow_TitleBar_Canvas">
             <Grid Width="{Binding ActualWidth, ElementName=cnvsTitleCanvas}" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top">
                 <Label x:Name="lblTitle" Content="VU Dials - Demo App - v" FontWeight="Bold" FontFamily="Source Code Pro" Canvas.Left="295" VerticalAlignment="Center" HorizontalAlignment="Center" Height="24"/>
-                <Button x:Name="btnX" Content="X" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnX_Click" Canvas.Left="760" Canvas.Top="1" Margin="752,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Close">
+                <Button x:Name="btnX" Content="X" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnX_Click" Canvas.Left="760" Canvas.Top="1" Margin="752,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Close" AutomationProperties.AutomationId="MainWindow_Close_Button">
                     <Button.Background>
                         <SolidColorBrush Color="{DynamicResource Primary500}"/>
                     </Button.Background>
                 </Button>
-                <Button x:Name="btnMin" Content="_" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnMin_Click" Canvas.Left="715" Canvas.Top="1" Margin="709,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Minimize" >
+                <Button x:Name="btnMin" Content="_" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnMin_Click" Canvas.Left="715" Canvas.Top="1" Margin="709,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Minimize" AutomationProperties.AutomationId="MainWindow_Minimize_Button" >
                     <Button.Foreground>
                         <SolidColorBrush Color="{DynamicResource Accent100Foreground}"/>
                     </Button.Foreground>
@@ -33,7 +33,7 @@
                         <SolidColorBrush Color="{DynamicResource Accent200Foreground}"/>
                     </Button.Background>
                 </Button>
-                <Button x:Name="btnMinToTray" Content="T" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnMinToTray_Click" Canvas.Left="715" Canvas.Top="1" Margin="666,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Minimize to system tray" >
+                <Button x:Name="btnMinToTray" Content="T" HorizontalAlignment="Left" VerticalAlignment="Center" Width="38" Height="22" FontSize="10" BorderThickness="0,0,0,0" Click="btnMinToTray_Click" Canvas.Left="715" Canvas.Top="1" Margin="666,1,0,0" materialDesign:ButtonAssist.CornerRadius="2" ToolTip="Minimize to system tray" AutomationProperties.AutomationId="MainWindow_Tray_Button" >
                     <Button.Foreground>
                         <SolidColorBrush Color="{DynamicResource Accent100Foreground}"/>
                     </Button.Foreground>
@@ -50,7 +50,7 @@
             <Grid Width="{Binding ActualWidth, ElementName=cnvsDialCanvas}" Height="{Binding ActualHeight, ElementName=cnvsDialCanvas}">
                 <Label Content="Dial List" HorizontalAlignment="Center" VerticalAlignment="Top" Width="244" HorizontalContentAlignment="Center" FontSize="16" FontWeight="Bold"/>
 
-                <ListBox x:Name="lbDials" d:ItemsSource="{d:SampleData ItemCount=5}" SelectionChanged="lbDials_SelectionChanged" Canvas.Top="32" Height="410" Width="230" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,52,0,0" Background="#00000000" Style="{DynamicResource MaterialDesignListBox}">
+                <ListBox x:Name="lbDials" d:ItemsSource="{d:SampleData ItemCount=5}" SelectionChanged="lbDials_SelectionChanged" Canvas.Top="32" Height="410" Width="230" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,52,0,0" Background="#00000000" Style="{DynamicResource MaterialDesignListBox}" AutomationProperties.AutomationId="MainWindow_DialList_ListBox">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,2,0,2">
@@ -76,7 +76,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <CheckBox x:Name="chRunOnStartup" Content="Run VU1 Demo App on system boot" HorizontalAlignment="Center" Margin="0,476,0,0" VerticalAlignment="Top" Width="229" Click="chRunOnSystemStart"/>
+                <CheckBox x:Name="chRunOnStartup" Content="Run VU1 Demo App on system boot" HorizontalAlignment="Center" Margin="0,476,0,0" VerticalAlignment="Top" Width="229" Click="chRunOnSystemStart" AutomationProperties.AutomationId="MainWindow_RunOnStartup_CheckBox"/>
 
                 <!-- Server connection settings -->
                 <Grid Width="229" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,496,0,0">
@@ -99,9 +99,9 @@
                         </Grid.ColumnDefinitions>
 
                         <Label Grid.Column="0" Content="VU Server:" Height="24" VerticalAlignment="Center" ToolTip="VU Server host and port"/>
-                        <TextBox Grid.Column="1" x:Name="txtServerHost" Width="110" Height="22" VerticalAlignment="Center" ToolTip="VU Server hostname or IP address (e.g. 192.168.1.100)"/>
+                        <TextBox Grid.Column="1" x:Name="txtServerHost" Width="110" Height="22" VerticalAlignment="Center" ToolTip="VU Server hostname or IP address (e.g. 192.168.1.100)" AutomationProperties.AutomationId="MainWindow_ServerHost_TextBox"/>
                         <Label Grid.Column="2" Content=":" Height="24" Width="12" HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="3" x:Name="txtServerPort" Width="45" Height="22" VerticalAlignment="Center" ToolTip="VU Server port (default: 5340)" PreviewTextInput="IntegerTextBoxInput"/>
+                        <TextBox Grid.Column="3" x:Name="txtServerPort" Width="45" Height="22" VerticalAlignment="Center" ToolTip="VU Server port (default: 5340)" PreviewTextInput="IntegerTextBoxInput" AutomationProperties.AutomationId="MainWindow_ServerPort_TextBox"/>
                     </Grid>
 
                     <Separator Grid.Row="1" Margin="0,4,0,0"/>
@@ -121,11 +121,11 @@
                         <Button Grid.Column="2" x:Name="btnToggleDialUpdate" Click="btnToggleDialUpdate_click" Content="{materialDesign:PackIcon Pause}"
                                 IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                                 Style="{StaticResource MaterialDesignFlatDarkButton}"
-                                Height="22" ToolTip="Pause/Resume sending sensor values to VU1 server"/>
+                            Height="22" ToolTip="Pause/Resume sending sensor values to VU1 server" AutomationProperties.AutomationId="MainWindow_ToggleDialUpdate_Button"/>
                     </Grid>
 
-                    <Button Grid.Row="5" x:Name="btnReconnect" Content="Reconnect" Height="24" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect"/>
-                    <Label Grid.Row="6" x:Name="lblConnectionStatus" Content="" Height="22" HorizontalContentAlignment="Center" FontSize="10"/>
+                    <Button Grid.Row="5" x:Name="btnReconnect" Content="Reconnect" Height="24" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect" AutomationProperties.AutomationId="MainWindow_Reconnect_Button"/>
+                    <Label Grid.Row="6" x:Name="lblConnectionStatus" Content="" Height="22" HorizontalContentAlignment="Center" FontSize="10" AutomationProperties.AutomationId="MainWindow_ConnectionStatus_Label"/>
                 </Grid>
 
 
@@ -157,13 +157,13 @@
                 <Label Grid.Row="0" Content="Configure dial" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
 
                 <Label Grid.Row="2" Content="Dial Name:" Height="25" Width="100" HorizontalAlignment="Left" />
-                <TextBox Grid.Row="2" x:Name="txtlSelectedDialName" TextWrapping="Wrap" Text="" HorizontalAlignment="Left" VerticalAlignment="Center" Width="250" Margin="120,0,0,0"/>
+                <TextBox Grid.Row="2" x:Name="txtlSelectedDialName" TextWrapping="Wrap" Text="" HorizontalAlignment="Left" VerticalAlignment="Center" Width="250" Margin="120,0,0,0" AutomationProperties.AutomationId="MainWindow_DialName_TextBox"/>
 
                 <Label Grid.Row="3" Content="Dial UID:" Height="25" Width="100" HorizontalAlignment="Left" />
                 <Label Grid.Row="3" x:Name="lblSelectedDialUID" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="220" Margin="120,0,0,0" Content=""/>
 
                 <Label Grid.Row="4" Content="Metric:" Height="25" Width="100" HorizontalAlignment="Left" />
-                <Label Grid.Row="4" x:Name="lblCurrentMetric" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="390" Margin="120,0,0,0" Content=""/>
+                <Label Grid.Row="4" x:Name="lblCurrentMetric" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="390" Margin="120,0,0,0" Content="" AutomationProperties.AutomationId="MainWindow_CurrentMetric_Label"/>
 
                 <Border Grid.Row="5"
                         x:Name="brdSensorUnavailable"
@@ -184,8 +184,8 @@
                 </Border>
 
                 <Label Grid.Row="6" Content="Value:" Height="25" Width="100" HorizontalAlignment="Left" />
-                <Label Grid.Row="6" x:Name="lblCurrentPercent" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" Content=""/>
-                <Label Grid.Row="6" x:Name="lblCurrentValue" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="180,0,0,0" Content=""/>
+                <Label Grid.Row="6" x:Name="lblCurrentPercent" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" Content="" AutomationProperties.AutomationId="MainWindow_CurrentPercent_Label"/>
+                <Label Grid.Row="6" x:Name="lblCurrentValue" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="180,0,0,0" Content="" AutomationProperties.AutomationId="MainWindow_CurrentValue_Label"/>
 
                 <Label Grid.Row="7" Content="Min:" Height="25" Width="100" HorizontalAlignment="Left" />
                 <Label Grid.Row="7" x:Name="lblScalingMin" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center" Width="320" Margin="120,0,0,0" Content=""/>
@@ -206,7 +206,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <materialDesign:PackIcon x:Name="icoMetricStatus" Kind="Information" Width="14" Height="14" Margin="0,0,6,0" Foreground="#FF606060"/>
                         <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
-                        <TextBlock x:Name="txtMetricStatus" Text="Not configured" Margin="5,0,10,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#FF3A3A3A"/>
+                        <TextBlock x:Name="txtMetricStatus" Text="Not configured" Margin="5,0,10,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#FF3A3A3A" AutomationProperties.AutomationId="MainWindow_MetricStatus_Text"/>
                         <TextBlock Text="Updated:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
                         <TextBlock x:Name="txtMetricLastUpdate" Text="-" Margin="5,0,10,0" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
                         <TextBlock Text="Last valid:" VerticalAlignment="Center" Foreground="#FF3A3A3A"/>
@@ -215,7 +215,7 @@
                 </Border>
 
                 <Label Grid.Row="10" Content="Metric Type" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <ComboBox Grid.Row="10" x:Name="cbDialMetricCategory" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}"  SelectionChanged="cbDialMetricCategory_SelectionChanged">
+                <ComboBox Grid.Row="10" x:Name="cbDialMetricCategory" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}"  SelectionChanged="cbDialMetricCategory_SelectionChanged" AutomationProperties.AutomationId="MainWindow_MetricCategory_ComboBox">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
@@ -226,7 +226,7 @@
                 </ComboBox>
 
                 <Label Grid.Row="11" Content="Selected Metric" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <ComboBox Grid.Row="11" x:Name="cbDialMetric" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}">
+                <ComboBox Grid.Row="11" x:Name="cbDialMetric" Width="220" Height="25" HorizontalAlignment="Left" Margin="120,0,0,0" ItemsSource="{Binding}" AutomationProperties.AutomationId="MainWindow_SelectedMetric_ComboBox">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
@@ -242,13 +242,13 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button Grid.Row="11" x:Name="btnSave" Content="Save dial config" Width="140" Height="32" HorizontalAlignment="Left" Margin="370,4,0,4" ToolTip="Save dial settings" Click="btnSaveDialSettings_click"/>
+                <Button Grid.Row="11" x:Name="btnSave" Content="Save dial config" Width="140" Height="32" HorizontalAlignment="Left" Margin="370,4,0,4" ToolTip="Save dial settings" Click="btnSaveDialSettings_click" AutomationProperties.AutomationId="MainWindow_SaveDialConfig_Button"/>
 
                 <Label Grid.Row="12" Content="Metric Min" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBox Grid.Row="12" x:Name="txtMinValue" TextWrapping="Wrap" Text="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 0%" PreviewTextInput="NumericTextBoxInput" />
+                <TextBox Grid.Row="12" x:Name="txtMinValue" TextWrapping="Wrap" Text="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 0%" PreviewTextInput="NumericTextBoxInput" AutomationProperties.AutomationId="MainWindow_MinValue_TextBox" />
 
                 <Label Grid.Row="13" Content="Metric Max" Width="100" Height="25" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <TextBox Grid.Row="13" x:Name="txtMaxValue" TextWrapping="Wrap" Text="100" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 100%" PreviewTextInput="NumericTextBoxInput" />
+                <TextBox Grid.Row="13" x:Name="txtMaxValue" TextWrapping="Wrap" Text="100" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Margin="120,0,0,0" ToolTip="This value will be used as the dial's 100%" PreviewTextInput="NumericTextBoxInput" AutomationProperties.AutomationId="MainWindow_MaxValue_TextBox" />
 
                 <Border Grid.Row="14"
                         x:Name="brdScalingValidation"
@@ -269,9 +269,9 @@
                 </Border>
 
                 <Button Grid.Row="15" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click"/>
-                <Button Grid.Row="15" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click"/>
+                <Button Grid.Row="15" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click" AutomationProperties.AutomationId="MainWindow_SetRules_Button"/>
                 <Button Grid.Row="15" x:Name="btnChangeColor" Content="Set color" Width="120" Height="32" HorizontalAlignment="Left" Margin="270, 0, 0, 0" ToolTip="Manually change dial background color" Click="btnChangeDialColor_click"/>
-                <Button Grid.Row="15" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click"/>
+                <Button Grid.Row="15" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click" AutomationProperties.AutomationId="MainWindow_About_Button"/>
             </Grid>
         </Canvas>
 

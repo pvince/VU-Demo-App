@@ -10,7 +10,7 @@
         Loaded="thresholdWindow_loaded"
         Title="Dial Threshold Rules" Height="540" Width="450" WindowStartupLocation="CenterOwner">
     <Grid>
-        <ComboBox x:Name="cbThresholds" HorizontalAlignment="Left" Margin="28,59,0,0" VerticalAlignment="Top" Width="372" SelectionChanged="cbRuleSelection_SelectionChanged">
+        <ComboBox x:Name="cbThresholds" HorizontalAlignment="Left" Margin="28,59,0,0" VerticalAlignment="Top" Width="372" SelectionChanged="cbRuleSelection_SelectionChanged" AutomationProperties.AutomationId="ThresholdDialog_Rules_ComboBox">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock>
@@ -28,15 +28,15 @@
         </ComboBox>
 
         <Label Content="If dial value is less or equal to" HorizontalAlignment="Left" Margin="28,189,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtValue" HorizontalAlignment="Left" Margin="193,189,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="28" PreviewTextInput="NumericTextBoxInput"/>
+        <TextBox x:Name="txtValue" HorizontalAlignment="Left" Margin="193,189,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="28" PreviewTextInput="NumericTextBoxInput" AutomationProperties.AutomationId="ThresholdDialog_Value_TextBox"/>
         <Label Content="%" HorizontalAlignment="Left" Margin="226,189,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.244,0.577"/>
-        <Slider x:Name="sliderRed" HorizontalAlignment="Left" Margin="104,257,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderRed" HorizontalAlignment="Left" Margin="104,257,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="ThresholdDialog_Red_Slider" />
         <Label Content="Red" HorizontalAlignment="Left" Margin="28,253,0,0" VerticalAlignment="Top"/>
-        <Slider x:Name="sliderGreen" HorizontalAlignment="Left" Margin="104,298,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderGreen" HorizontalAlignment="Left" Margin="104,298,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="ThresholdDialog_Green_Slider" />
         <Label Content="Green" HorizontalAlignment="Left" Margin="28,294,0,0" VerticalAlignment="Top"/>
-        <Slider x:Name="sliderBlue" HorizontalAlignment="Left" Margin="104,337,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" />
+        <Slider x:Name="sliderBlue" HorizontalAlignment="Left" Margin="104,337,0,0" VerticalAlignment="Top" Width="279" Maximum="100" LargeChange="5" SmallChange="1" AutoToolTipPlacement="TopLeft" IsSnapToTickEnabled="True" AutomationProperties.AutomationId="ThresholdDialog_Blue_Slider" />
         <Label Content="Blue" HorizontalAlignment="Left" Margin="28,333,0,0" VerticalAlignment="Top"/>
-        <ComboBox x:Name="cbPreset" HorizontalAlignment="Left" Margin="104,385,0,0" VerticalAlignment="Top" Width="279" ItemsSource="{Binding backlightPresets}" SelectionChanged="cbBacklightPreset_SelectionChanged">
+        <ComboBox x:Name="cbPreset" HorizontalAlignment="Left" Margin="104,385,0,0" VerticalAlignment="Top" Width="279" ItemsSource="{Binding backlightPresets}" SelectionChanged="cbBacklightPreset_SelectionChanged" AutomationProperties.AutomationId="ThresholdDialog_Preset_ComboBox">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}"/>
@@ -44,9 +44,9 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
         <Label Content="Preset" HorizontalAlignment="Left" Margin="28,386,0,0" VerticalAlignment="Top"/>
-        <Button Content="Delete rule" HorizontalAlignment="Left" Margin="299,103,0,0" VerticalAlignment="Top" Click="btnDeleteThreshold_click"/>
+        <Button x:Name="btnDeleteThreshold" Content="Delete rule" HorizontalAlignment="Left" Margin="299,103,0,0" VerticalAlignment="Top" Click="btnDeleteThreshold_click" AutomationProperties.AutomationId="ThresholdDialog_Delete_Button"/>
 
-        <Button Content="Create/update rule" HorizontalAlignment="Center" Margin="0,443,0,0" VerticalAlignment="Top" Click="btnSetThreshold_click"/>
+        <Button x:Name="btnSetThreshold" Content="Create/update rule" HorizontalAlignment="Center" Margin="0,443,0,0" VerticalAlignment="Top" Click="btnSetThreshold_click" AutomationProperties.AutomationId="ThresholdDialog_Save_Button"/>
         <Label Content="Existing rules" HorizontalAlignment="Left" Margin="28,30,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
         <Label Content="Create new rule" HorizontalAlignment="Left" Margin="28,160,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
         <Label Content="Then set backlight color to" HorizontalAlignment="Left" Margin="28,218,0,0" VerticalAlignment="Top"/>

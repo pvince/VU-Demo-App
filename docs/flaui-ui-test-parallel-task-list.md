@@ -1,72 +1,78 @@
-# FlaUI UI Test Parallel Task List
+# FlaUI AutomationId + Interaction Test Parallel Task List
 
-This task list is designed for parallel sub-agent execution with minimal merge conflicts.
+This task list is executable by multiple sub-agents in parallel with low merge-conflict risk.
 
 ## Scope
 
-- Add a UI smoke-test scaffold to VU1WPF.Tests using FlaUI UIA3.
-- Keep production logic behavior unchanged.
-- Keep existing xUnit unit/integration tests stable.
+- Add explicit `AutomationProperties.AutomationId` to key controls in VU1WPF XAML.
+- Upgrade smoke tests from window-level checks to control-interaction checks.
+- Keep production behavior unchanged.
 
-## Parallel Workstreams
+## Agent Workstreams
 
-1. Workstream A: Project wiring
-- Update VU1WPF.Tests package references for FlaUI.
-- Confirm target framework remains net8.0-windows.
-- Confirm UI tests are marked with Trait Category=UI.
-- Output: buildable test project with FlaUI dependencies.
+1. Agent A - Main window AutomationIds
+- File owner: `VU1WPF/MainWindow.xaml`
+- Add IDs for dial list, host/port text boxes, reconnect/about/set-rules/save buttons, metric status text, and min/max inputs.
+- Output: stable selectors for primary app surface.
 
-2. Workstream B: Fixture and lifecycle
-- Implement shared fixture for launching VU1-Demo-App executable.
-- Add deterministic app shutdown and process cleanup.
-- Add app binary resolution via env var VU1WPF_UI_APP_PATH, then fallback paths.
-- Output: reusable fixture usable by all UI smoke tests.
+2. Agent B - Modal AutomationIds
+- File owners: `VU1WPF/AboutWindow.xaml`, `VU1WPF/ThresholdsWindow.xaml`, `VU1WPF/SetColorWindow.xaml`
+- Add IDs to close/save/delete buttons and core inputs/sliders/combos.
+- Add missing `x:Name` values for unnamed ThresholdsWindow buttons before assigning AutomationIds.
+- Output: stable selectors for modal workflows.
 
-3. Workstream C: UI helper layer
-- Add helper methods for AutomationId-based element lookup.
-- Add helper wait/retry for top-level window detection.
-- Keep helpers assertion-friendly for readable failures.
-- Output: centralized selectors and waits.
+3. Agent C - Selector helper layer
+- File owner: `VU1WPF/VU1WPF.Tests/UI/UiElementAssertions.cs`
+- Add selector constants and strict `AutomationId` helper methods.
+- Keep fallback helper (`AutomationId` or name) for transitional safety.
+- Output: reusable selector abstraction for test files.
 
-4. Workstream D: Smoke tests for startup
-- Add smoke test for main window title.
-- Add smoke test for core controls existence.
-- Mark each with Trait Category=UI.
-- Output: startup regression coverage.
+4. Agent D - Main window interaction tests
+- File owner: `VU1WPF/VU1WPF.Tests/UI/MainWindowSmokeTests.cs`
+- Add/upgrade tests to verify controls by AutomationId and perform basic input interactions.
+- Output: deterministic startup and form interaction coverage.
 
-5. Workstream E: Smoke tests for secondary window
-- Add smoke test for About window open and close flow.
-- Ensure test closes opened windows before completion.
-- Output: basic modal/top-level interaction coverage.
+5. Agent E - Modal interaction tests
+- File owner: `VU1WPF/VU1WPF.Tests/UI/ModalSmokeTests.cs`
+- Add tests for About open/close and Threshold dialog open with control presence checks.
+- Output: deterministic dialog lifecycle coverage.
 
-6. Workstream F: Verification and hardening
-- Build UIInvestigation configuration.
-- Run dotnet test filtered to Category=UI.
-- Run full test suite after UI pass.
-- Capture flaky selectors and adjust waits only where race is confirmed.
-- Output: validated scaffold and reliability notes.
+6. Agent F - Reconnect interaction tests
+- File owner: `VU1WPF/VU1WPF.Tests/UI/ReconnectSmokeTests.cs`
+- Add reconnect button interaction test and status-label accessibility checks.
+- Output: deterministic reconnect workflow smoke coverage.
+
+7. Agent G - Verification and hardening
+- Run filtered UI tests and full suite.
+- Audit duplicate AutomationIds.
+- Tune waits only when race condition is demonstrated.
+- Output: stable and validated UI smoke baseline.
 
 ## Sequencing
 
-- Start A, B, C in parallel.
-- Start D and E when B and C are complete.
-- Run F after D and E are merged.
+- Phase 1 in parallel: Agents A, B, C.
+- Phase 2 in parallel: Agents D, E, F (after Phase 1 merge).
+- Phase 3: Agent G verification and stabilization.
 
-## Command Baseline
+## Commands
 
-From VU1WPF directory:
+From `VU1WPF`:
 
 ```powershell
-dotnet restore
 dotnet build --configuration UIInvestigation
 dotnet test --configuration Debug --filter "Category=UI"
 dotnet test --configuration Debug
 ```
 
+Duplicate AutomationId audit:
+
+```powershell
+rg "AutomationProperties.AutomationId" VU1WPF/*.xaml -n
+```
+
 ## Guardrails
 
-- Do not coerce unavailable sensor states to numeric 0.
-- Do not alter MetricPollingService, DialUpdateOrchestrator, or config persistence behavior for scaffold-only work.
-- Keep UI tests in dedicated files/folders under VU1WPF.Tests.
-- Prefer AutomationId selectors over visible text selectors.
-- Keep per-test runtime bounded with explicit waits/timeouts.
+- Do not change polling/status semantics or config persistence behavior.
+- Prefer `AutomationId` selectors; use name fallback only when migration is incomplete.
+- Keep tests bounded with explicit retry timeouts.
+- Keep UI tests in `VU1WPF/VU1WPF.Tests/UI/`.
