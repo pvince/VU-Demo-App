@@ -80,6 +80,34 @@ To run a single test class or method, use the `--filter` flag:
 dotnet test --filter "FullyQualifiedName~ClassDialGUITests"
 ```
 
+## Collect Coverage
+
+Use `dotnet-coverage` from the `VU1WPF\` directory with the focused settings file at `dotnet-coverage.settings.xml`.
+
+If the tool is missing, install it once:
+
+```powershell
+dotnet tool install --global dotnet-coverage
+```
+
+Generate a stable Cobertura report for the full suite:
+
+```powershell
+dotnet-coverage collect --settings ".\dotnet-coverage.settings.xml" --output "..\Artifacts\coverage\final.cobertura.xml" --output-format cobertura dotnet test -c Debug --verbosity minimal
+```
+
+Recommended baseline path while iterating:
+
+```powershell
+dotnet-coverage collect --settings ".\dotnet-coverage.settings.xml" --output "..\Artifacts\coverage\baseline.cobertura.xml" --output-format cobertura dotnet test -c Debug --verbosity minimal
+```
+
+If multiple coverage artifacts need to be combined, merge them:
+
+```powershell
+dotnet-coverage merge -o "..\Artifacts\coverage\merged.cobertura.xml" -f cobertura "..\Artifacts\coverage\*.cobertura.xml"
+```
+
 ---
 
 ## Publish Installer (NSIS)
@@ -124,6 +152,7 @@ Output: `Artifacts\VU1-DemoApp-Installer.exe`
 | UIInvestigation build | `dotnet build -c UIInvestigation` |
 | Run all tests | `dotnet test -c Debug` |
 | Run tests (no rebuild) | `dotnet test --no-build` |
+| Collect coverage | `dotnet-coverage collect --settings ".\dotnet-coverage.settings.xml" --output "..\Artifacts\coverage\final.cobertura.xml" --output-format cobertura dotnet test -c Debug --verbosity minimal` |
 | Publish installer | See NSIS steps above (run from repo root) |
 
 ---
