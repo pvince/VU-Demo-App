@@ -35,6 +35,48 @@ public sealed class ConfigurationManagerTests : IDisposable
     }
 
     [Fact]
+    public void Constructor_CreatesDefaultConfigFile_WhenConfigIsMissing()
+    {
+        string configPath = Path.Combine(_configDirectory, "vu1demo_config.yaml");
+
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.True(File.Exists(configPath));
+        Assert.Equal(0.5f, manager.GetDialUpdatePeriod());
+        Assert.Equal("localhost", manager.GetServerHost());
+        Assert.Equal(5340, manager.GetServerPort());
+        Assert.Equal("cTpAWYuRpA2zx75Yh961Cg", manager.GetMasterKey());
+    }
+
+    [Fact]
+    public void Constructor_ClampsUpdatePeriod_AndRestoresBlankMasterKey_WhenConfigValuesAreInvalid()
+    {
+        File.WriteAllText(
+            Path.Combine(_configDirectory, "vu1demo_config.yaml"),
+            "master_key: \"\"\n" +
+            "dial_update_period: 0.1\n" +
+            "server_host: localhost\n" +
+            "server_port: 5340\n" +
+            "dial_metrics: []\n");
+
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.Equal(0.2f, manager.GetDialUpdatePeriod());
+        Assert.Equal("cTpAWYuRpA2zx75Yh961Cg", manager.GetMasterKey());
+    }
+
+    [Fact]
+    public void MissingDialQueries_ReturnFallbackValues()
+    {
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.Equal(string.Empty, manager.GetDialMetric("missing"));
+        Assert.Equal(100f, manager.GetDialMin("missing"));
+        Assert.Equal(100f, manager.GetDialMax("missing"));
+        Assert.Empty(manager.GetDialThresholds("missing"));
+    }
+
+    [Fact]
     public void UpdateDialConfig_StoresMetricScalingAndThresholds_ForDialWithoutAttachedSensor()
     {
         var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
@@ -124,6 +166,22 @@ public sealed class ConfigurationManagerTests : IDisposable
         Assert.Equal(4, thresholds[0].BacklightRed);
         Assert.Equal(5, thresholds[0].BacklightGreen);
         Assert.Equal(6, thresholds[0].BacklightBlue);
+    }
+
+    [Fact]
+    public async Task RequestSaveConfigFileDebounced_PersistsLatestServerValues()
+    {
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        manager.SetServerHost("demo-host");
+        manager.SetServerPort(5454);
+        manager.RequestSaveConfigFileDebounced();
+        await manager.FlushPendingConfigSaveAsync();
+
+        var reloaded = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.Equal("demo-host", reloaded.GetServerHost());
+        Assert.Equal(5454, reloaded.GetServerPort());
     }
 
     public void Dispose()

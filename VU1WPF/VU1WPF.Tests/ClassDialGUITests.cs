@@ -40,6 +40,69 @@ public sealed class ClassDialGUITests
         Assert.False(dial.HasUnavailableSensorBinding);
     }
 
+    [Fact]
+    public void ConfiguredSensorIdentifier_UsesAttachedSensorIdentifier_WhenSensorIsPresent()
+    {
+        ISensor sensor = CreateSensorProxy();
+        var dial = new ClassDialGUI
+        {
+            Metric = "Temperature",
+            SensorIdentifier = "/saved/identifier",
+            Sensor = sensor
+        };
+
+        Assert.Equal(sensor.Identifier.ToString(), dial.ConfiguredSensorIdentifier);
+        Assert.True(dial.HasConfiguredSensorBinding);
+    }
+
+    [Fact]
+    public void ConfiguredSensorIdentifier_UsesStoredIdentifier_WhenSensorIsMissing()
+    {
+        var dial = new ClassDialGUI
+        {
+            Metric = "Temperature",
+            SensorIdentifier = "/saved/identifier"
+        };
+
+        Assert.Equal("/saved/identifier", dial.ConfiguredSensorIdentifier);
+        Assert.True(dial.HasConfiguredSensorBinding);
+    }
+
+    [Fact]
+    public void ConfiguredSensorIdentifier_FallsBackToMetric_WhenNoSensorIdentifierExists()
+    {
+        var dial = new ClassDialGUI
+        {
+            Metric = "Temperature"
+        };
+
+        Assert.Equal("Temperature", dial.ConfiguredSensorIdentifier);
+        Assert.True(dial.HasConfiguredSensorBinding);
+    }
+
+    [Fact]
+    public void BacklightPresets_ExposeExpectedNamedColors()
+    {
+        Assert.Contains(BacklightPresets.AvailablePresets, preset =>
+            preset.Name == "Off" &&
+            preset.Red == 0 &&
+            preset.Green == 0 &&
+            preset.Blue == 0);
+
+        Assert.Contains(BacklightPresets.AvailablePresets, preset =>
+            preset.Name == "White" &&
+            preset.Red == 100 &&
+            preset.Green == 100 &&
+            preset.Blue == 100);
+    }
+
+    private static Identifier CreateIdentifier(string identifier)
+    {
+        ConstructorInfo ctor = typeof(Identifier).GetConstructor(new[] { typeof(Identifier), typeof(string[]) })!;
+        string[] parts = identifier.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return (Identifier)ctor.Invoke(new object?[] { null, parts });
+    }
+
     private static ISensor CreateSensorProxy()
     {
         return DispatchProxy.Create<ISensor, SensorProxy>();
@@ -51,7 +114,7 @@ public sealed class ClassDialGUITests
         {
             if (targetMethod?.Name == "get_Identifier")
             {
-                return new Identifier("/amdcpu/0/temperature/2");
+                return CreateIdentifier("/amdcpu/0/temperature/2");
             }
 
             if (targetMethod?.Name == "get_Name")
