@@ -34,6 +34,89 @@ public sealed class MainWindowSmokeTests
 
     [Fact]
     [Trait("Category", "UI")]
+    public void Startup_AllMainButtons_AreVisibleWithinWindow()
+    {
+        string[] buttonIds =
+        {
+            SelectorConstants.MainWindowCloseButton,
+            SelectorConstants.MainWindowMinimizeButton,
+            SelectorConstants.MainWindowTrayButton,
+            SelectorConstants.MainWindowRefreshDialsButton,
+            SelectorConstants.MainWindowToggleDialUpdateButton,
+            SelectorConstants.MainWindowReconnectButton,
+            SelectorConstants.MainWindowSaveDialConfigButton,
+            SelectorConstants.MainWindowSetImageButton,
+            SelectorConstants.MainWindowSetRulesButton,
+            SelectorConstants.MainWindowSetColorButton,
+            SelectorConstants.MainWindowAboutButton,
+        };
+
+        foreach (string buttonId in buttonIds)
+        {
+            var button = UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, buttonId).AsButton();
+            UiElementAssertions.RequireElementVisibleWithinWindow(_fixture.MainWindow, button, buttonId);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "UI")]
+    public void Startup_AllExpectedVisibleElements_AreFullyVisibleWithinWindow()
+    {
+        string[] visibleElementIds =
+        {
+            SelectorConstants.MainWindowDialList,
+            SelectorConstants.MainWindowRunOnStartupCheckBox,
+            SelectorConstants.MainWindowServerHostTextBox,
+            SelectorConstants.MainWindowServerPortTextBox,
+            SelectorConstants.MainWindowReconnectButton,
+            SelectorConstants.MainWindowConnectionStatusLabel,
+            SelectorConstants.MainWindowDialNameTextBox,
+            SelectorConstants.MainWindowCurrentMetricLabel,
+            SelectorConstants.MainWindowCurrentPercentLabel,
+            SelectorConstants.MainWindowCurrentValueLabel,
+            SelectorConstants.MainWindowMetricStatusText,
+            SelectorConstants.MainWindowMetricCategoryComboBox,
+            SelectorConstants.MainWindowSelectedMetricComboBox,
+            SelectorConstants.MainWindowMinValueTextBox,
+            SelectorConstants.MainWindowMaxValueTextBox,
+            SelectorConstants.MainWindowBrandingLabel,
+        };
+
+        foreach (string elementId in visibleElementIds)
+        {
+            var element = UiElementAssertions.RequireElementByAutomationIdOnly(_fixture.MainWindow, elementId);
+            UiElementAssertions.RequireElementVisibleWithinWindow(_fixture.MainWindow, element, elementId);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "UI")]
+    public void Startup_FooterTexts_DoNotOverlap()
+    {
+        var connectionStatus = UiElementAssertions.RequireElementByAutomationIdOnly(
+            _fixture.MainWindow,
+            SelectorConstants.MainWindowConnectionStatusLabel);
+        var brandingLabel = UiElementAssertions.RequireElementByAutomationIdOnly(
+            _fixture.MainWindow,
+            SelectorConstants.MainWindowBrandingLabel);
+
+        UiElementAssertions.RequireElementVisibleWithinWindow(
+            _fixture.MainWindow,
+            connectionStatus,
+            SelectorConstants.MainWindowConnectionStatusLabel);
+        UiElementAssertions.RequireElementVisibleWithinWindow(
+            _fixture.MainWindow,
+            brandingLabel,
+            SelectorConstants.MainWindowBrandingLabel);
+        UiElementAssertions.RequireElementsDoNotOverlap(
+            connectionStatus,
+            SelectorConstants.MainWindowConnectionStatusLabel,
+            brandingLabel,
+            SelectorConstants.MainWindowBrandingLabel);
+    }
+
+    [Fact]
+    [Trait("Category", "UI")]
     public void Startup_ServerFieldsAcceptInput()
     {
         var hostTextBox = UiElementAssertions

@@ -116,7 +116,7 @@
                         <Button Grid.Column="0" Click="btnRefreshDials_click" Content="{materialDesign:PackIcon Refresh}"
                                 IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                                 Style="{StaticResource MaterialDesignFlatDarkButton}"
-                                Height="22" ToolTip="Reload the list of dials"/>
+                            Height="22" ToolTip="Reload the list of dials" AutomationProperties.AutomationId="MainWindow_RefreshDials_Button"/>
 
                         <Button Grid.Column="2" x:Name="btnToggleDialUpdate" Click="btnToggleDialUpdate_click" Content="{materialDesign:PackIcon Pause}"
                                 IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
@@ -125,7 +125,6 @@
                     </Grid>
 
                     <Button Grid.Row="5" x:Name="btnReconnect" Content="Reconnect" Height="24" Click="btnReconnect_Click" ToolTip="Apply server host/port and reconnect" AutomationProperties.AutomationId="MainWindow_Reconnect_Button"/>
-                    <Label Grid.Row="6" x:Name="lblConnectionStatus" Content="" Height="22" HorizontalContentAlignment="Center" FontSize="10" AutomationProperties.AutomationId="MainWindow_ConnectionStatus_Label"/>
                 </Grid>
 
 
@@ -268,13 +267,20 @@
                     </StackPanel>
                 </Border>
 
-                <Button Grid.Row="15" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click"/>
+                <Button Grid.Row="15" x:Name="btnUploadImage" Content="Set image" Width="120" Height="32" HorizontalAlignment="Left" Margin="0, 0, 30, 0" ToolTip="Change dial background image" Click="btnChangeImage_click" AutomationProperties.AutomationId="MainWindow_SetImage_Button"/>
                 <Button Grid.Row="15" x:Name="btnSetRules" Content="Set rules" Width="120" Height="32" HorizontalAlignment="Left" Margin="135, 0, 30, 0" ToolTip="Set rules for how backlight should be linked to dial value" Click="btnSetDialRules_click" AutomationProperties.AutomationId="MainWindow_SetRules_Button"/>
-                <Button Grid.Row="15" x:Name="btnChangeColor" Content="Set color" Width="120" Height="32" HorizontalAlignment="Left" Margin="270, 0, 0, 0" ToolTip="Manually change dial background color" Click="btnChangeDialColor_click"/>
+                <Button Grid.Row="15" x:Name="btnChangeColor" Content="Set color" Width="120" Height="32" HorizontalAlignment="Left" Margin="270, 0, 0, 0" ToolTip="Manually change dial background color" Click="btnChangeDialColor_click" AutomationProperties.AutomationId="MainWindow_SetColor_Button"/>
                 <Button Grid.Row="15" x:Name="btnAbout" Content="About" Width="120" Height="32" HorizontalAlignment="Right" Margin="0, 0, 0, 0" ToolTip="Demo App info" Click="btnAbout_click" AutomationProperties.AutomationId="MainWindow_About_Button"/>
             </Grid>
         </Canvas>
 
-        <Label Content="KaranovicResearch / Streacom" Height="20" HorizontalContentAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5, 0, 0, 5" Background="{x:Null}" Foreground="#FFB53B15" Width="239"/>
+        <Grid Margin="5,0,0,5" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" x:Name="lblConnectionStatus" Content="" Height="22" HorizontalContentAlignment="Left" FontSize="10" AutomationProperties.AutomationId="MainWindow_ConnectionStatus_Label"/>
+            <Label Grid.Row="1" Content="KaranovicResearch / Streacom" Height="20" HorizontalContentAlignment="Left" Background="{x:Null}" Foreground="#FFB53B15" Width="239" AutomationProperties.AutomationId="MainWindow_Branding_Label"/>
+        </Grid>
     </Grid>
 </Window>
