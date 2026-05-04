@@ -8,6 +8,7 @@ using VU1WPF;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Serilog;
+using Serilog.Events;
 using static KR_VU1_Sensors.ClassVUSensors;
 using System.Threading.Tasks;
 
@@ -21,6 +22,8 @@ namespace KR_VU1_ConfigurationManager
         private readonly string default_master_key = "cTpAWYuRpA2zx75Yh961Cg";
         private readonly string default_server_host = "localhost";
         private readonly int default_server_port = 5340;
+        private readonly string default_log_level = LogEventLevel.Information.ToString();
+        private readonly bool default_diagnostics_mode = false;
         private readonly string pathConfigFile;
         private readonly string pathFileName;
         private readonly bool showLoadFailureDialog;
@@ -86,6 +89,12 @@ namespace KR_VU1_ConfigurationManager
                 localConfig.masterKey = default_master_key;
             }
 
+            if (!Enum.TryParse<LogEventLevel>(localConfig.logLevel, true, out _))
+            {
+                Log.Warning("Invalid log level `{LogLevel}` found in config. Resetting to {DefaultLogLevel}.", localConfig.logLevel, default_log_level);
+                localConfig.logLevel = default_log_level;
+            }
+
             SaveConfigFile();   // Save default if no config file exists
         }
 
@@ -104,6 +113,8 @@ namespace KR_VU1_ConfigurationManager
             localConfig.masterKey = default_master_key;
             localConfig.serverHost = default_server_host;
             localConfig.serverPort = default_server_port;
+            localConfig.logLevel = default_log_level;
+            localConfig.diagnosticsMode = default_diagnostics_mode;
 
             Log.Information("Set update period to {0}.", localConfig.dialUpdatePeriod);
             Log.Information("Set Master Key to {0}.", localConfig.masterKey);
@@ -139,6 +150,21 @@ namespace KR_VU1_ConfigurationManager
         public int GetServerPort()
         {
             return localConfig.serverPort > 0 ? localConfig.serverPort : default_server_port;
+        }
+
+        public string GetLogLevel()
+        {
+            if (Enum.TryParse<LogEventLevel>(localConfig.logLevel, true, out LogEventLevel parsedLevel))
+            {
+                return parsedLevel.ToString();
+            }
+
+            return default_log_level;
+        }
+
+        public bool IsDiagnosticsModeEnabled()
+        {
+            return localConfig.diagnosticsMode;
         }
 
         public void SetServerHost(string host)
@@ -339,7 +365,9 @@ namespace KR_VU1_ConfigurationManager
                         dialUpdatePeriod = default_update_period,
                         masterKey = default_master_key,
                         serverHost = default_server_host,
-                        serverPort = default_server_port
+                        serverPort = default_server_port,
+                        logLevel = default_log_level,
+                        diagnosticsMode = default_diagnostics_mode
                     };
                     return;
                 }
@@ -349,7 +377,9 @@ namespace KR_VU1_ConfigurationManager
                     dialUpdatePeriod = p.dialUpdatePeriod,
                     masterKey = string.IsNullOrWhiteSpace(p.masterKey) ? default_master_key : p.masterKey,
                     serverHost = string.IsNullOrWhiteSpace(p.serverHost) ? default_server_host : p.serverHost,
-                    serverPort = p.serverPort > 0 ? p.serverPort : default_server_port
+                    serverPort = p.serverPort > 0 ? p.serverPort : default_server_port,
+                    logLevel = string.IsNullOrWhiteSpace(p.logLevel) ? default_log_level : p.logLevel,
+                    diagnosticsMode = p.diagnosticsMode
                 };
 
                 foreach (ConfigContentsDial dial in p.dial_metrics)

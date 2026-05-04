@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using Microsoft.Win32;
 using Serilog;
+using Serilog.Events;
 using System.Threading.Tasks;
 
 namespace VU1WPF
@@ -31,6 +32,9 @@ namespace VU1WPF
         public List<ClassDialGUI> gDials = new List<ClassDialGUI>();
         public ClassDialGUI gCurrentlySelectedDial = new ClassDialGUI { FriendlyName = "", UID = "" };
         private float? gLastValidMetricValue;
+        private readonly object gWarningThrottleLock = new object();
+        private readonly Dictionary<string, DateTime> gWarningLastLoggedAtUtc = new Dictionary<string, DateTime>();
+        private static readonly TimeSpan WarningThrottleInterval = TimeSpan.FromSeconds(15);
         bool gDialUpdatePaused = false;
         const String VU1_Registry_Key = "VU1-Demo-App";
         const String VU1_Registry_Path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
@@ -42,20 +46,22 @@ namespace VU1WPF
 
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
 
-            // Create logger
-            using var log = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.File(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\KaranovicResearch\VU1-DemoApp\log.txt",
-                    rollOnFileSizeLimit: true,
-                    fileSizeLimitBytes: 1048576,
-                    retainedFileCountLimit: 10)
-                .CreateLogger();
-            Log.Logger = log;
-
             // Create configuration manager instance
             ConfigManager = new ClassConfigurationManager();
+
+            // Create logger from configuration and keep it alive until process exit.
+            LogEventLevel configuredLevel = ParseLogLevel(ConfigManager.GetLogLevel(), LogEventLevel.Information);
+            bool diagnosticsMode = ConfigManager.IsDiagnosticsModeEnabled();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Is(configuredLevel)
+                .WriteTo.Console(restrictedToMinimumLevel: configuredLevel)
+                .WriteTo.File(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\KaranovicResearch\VU1-DemoApp\log.txt",
+                    restrictedToMinimumLevel: configuredLevel,
+                    rollOnFileSizeLimit: true,
+                    fileSizeLimitBytes: 1048576,
+                    retainedFileCountLimit: diagnosticsMode ? 20 : 10)
+                .CreateLogger();
 
 
             // Create instance of VU1 server
@@ -104,6 +110,7 @@ namespace VU1WPF
             timer.Start();
 
             Log.Information(String.Format("Dials updated every {0} seconds.", dialUpdatePeriod));
+            Log.Information("Client log level set to {LogLevel}. Diagnostics mode: {DiagnosticsMode}", configuredLevel, diagnosticsMode);
 
             if (RegistryValueExists("HKCU", VU1_Registry_Path, VU1_Registry_Key))
             {
@@ -566,6 +573,8 @@ namespace VU1WPF
             lblConnectionStatus.Content = "Connecting...";
             lblConnectionStatus.Foreground = System.Windows.Media.Brushes.Gray;
 
+            PauseDialUpdate();
+
             ConfigManager.SetServerHost(host);
             ConfigManager.SetServerPort(port);
             ConfigManager.RequestSaveConfigFileDebounced();
@@ -579,7 +588,11 @@ namespace VU1WPF
             if (ok)
             {
                 RefreshDialList();
+                ResumeDialUpdate();
+                return;
             }
+
+            Log.Warning("Reconnect failed for {Host}:{Port}; dial updates remain paused until next successful reconnect.", host, port);
         }
 
 
@@ -665,7 +678,10 @@ namespace VU1WPF
                         });
                     }
 
-                    Log.Warning("Skipping dial update due to unavailable metric reading. Dial: {DialUid}, Sensor: {SensorIdentifier}", dial.UID, dialSensorIdentifierUnavailable);
+                    LogThrottledWarning($"metric-unavailable-{dial.UID}",
+                        "Skipping dial update due to unavailable metric reading. Dial: {DialUid}, Sensor: {SensorIdentifier}",
+                        dial.UID,
+                        dialSensorIdentifierUnavailable);
                     return;
                 }
 
@@ -714,8 +730,36 @@ namespace VU1WPF
             List<ClassDialGUI> dialsToUpdate = gDials.Where(d => d.Sensor != null).ToList();
             foreach (ClassDialGUI dial in dialsToUpdate)
             {
-                await RefreshDialMetricAsync(dial).ConfigureAwait(false);
+                try
+                {
+                    await RefreshDialMetricAsync(dial).WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                }
+                catch (TimeoutException)
+                {
+                    LogThrottledWarning($"update-timeout-{dial.UID}", "Dial update timed out. Dial: {DialUid}", dial.UID);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Dial update failed. Dial: {DialUid}", dial.UID);
+                }
             }
+        }
+
+        private void LogThrottledWarning(string key, string messageTemplate, params object[] propertyValues)
+        {
+            DateTime now = DateTime.UtcNow;
+            lock (gWarningThrottleLock)
+            {
+                if (gWarningLastLoggedAtUtc.TryGetValue(key, out DateTime lastLoggedAt)
+                    && now - lastLoggedAt < WarningThrottleInterval)
+                {
+                    return;
+                }
+
+                gWarningLastLoggedAtUtc[key] = now;
+            }
+
+            Log.Warning(messageTemplate, propertyValues);
         }
 
         public void sortDialThresholds()
@@ -767,6 +811,11 @@ namespace VU1WPF
             {
                 Log.Verbose("Skipping tick because previous update is still running.");
             }
+        }
+
+        private static LogEventLevel ParseLogLevel(string levelText, LogEventLevel fallback)
+        {
+            return Enum.TryParse(levelText, true, out LogEventLevel parsedLevel) ? parsedLevel : fallback;
         }
 
 

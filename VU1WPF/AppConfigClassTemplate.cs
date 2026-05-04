@@ -27,6 +27,8 @@ namespace VU1WPF
         public float dialUpdatePeriod { get; set; }
         public String serverHost { get; set; } = String.Empty;
         public int serverPort { get; set; }
+        public String logLevel { get; set; } = String.Empty;
+        public bool diagnosticsMode { get; set; }
 
         public List<ConfigContentsDial> dial_metrics { get; set; } = new List<ConfigContentsDial>();
     }

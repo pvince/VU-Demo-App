@@ -45,18 +45,20 @@ namespace KR_VU1_Server
         private List<DialInfo> gDialInfo = new List<DialInfo>();
         private readonly object _dialInfoLock = new object();
         private readonly HttpClient _httpClient;
+        private readonly TimeSpan _requestTimeout;
 
         public VU1_Server(String API_Key) :
             this("localhost", 5340, API_Key)
         { }
 
-        public VU1_Server(String ServerIP = "localhost", int ServerPort = 5340, string API_Key = "", HttpClient? httpClient = null)
+        public VU1_Server(String ServerIP = "localhost", int ServerPort = 5340, string API_Key = "", HttpClient? httpClient = null, TimeSpan? requestTimeout = null)
         {
             _server_ip = ServerIP;
             _server_port = ServerPort;
             _api_key = API_Key;
 
             _httpClient = httpClient ?? new HttpClient();
+            _requestTimeout = requestTimeout ?? TimeSpan.FromSeconds(3);
         }
 
         public String get_api_url()
@@ -83,7 +85,7 @@ namespace KR_VU1_Server
                     "{0}/dial/list?key={1}",
                     get_api_url(),
                     Uri.EscapeDataString(_api_key));
-                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await GetWithTimeoutAsync(url, cancellationToken).ConfigureAwait(false);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -157,7 +159,7 @@ namespace KR_VU1_Server
 
             try
             {
-                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await GetWithTimeoutAsync(url, cancellationToken).ConfigureAwait(false);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (OperationCanceledException)
@@ -190,7 +192,7 @@ namespace KR_VU1_Server
 
             try
             {
-                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await GetWithTimeoutAsync(url, cancellationToken).ConfigureAwait(false);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (OperationCanceledException)
@@ -241,7 +243,7 @@ namespace KR_VU1_Server
 
             try
             {
-                HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await GetWithTimeoutAsync(url, cancellationToken).ConfigureAwait(false);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (OperationCanceledException)
@@ -280,7 +282,7 @@ namespace KR_VU1_Server
                 content.Add(new StringContent(get_api_key()), "key");
                 content.Add(new StreamContent(stream), "imgfile", Path.GetFileName(filepath));
 
-                HttpResponseMessage response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await PostWithTimeoutAsync(url, content, cancellationToken).ConfigureAwait(false);
                 return response.StatusCode == HttpStatusCode.OK;
             }
             catch (OperationCanceledException)
@@ -302,6 +304,20 @@ namespace KR_VU1_Server
                 Trace.WriteLine(err.Message);
                 return false;
             }
+        }
+
+        private async Task<HttpResponseMessage> GetWithTimeoutAsync(string url, CancellationToken cancellationToken)
+        {
+            using CancellationTokenSource timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(_requestTimeout);
+            return await _httpClient.GetAsync(url, timeoutCts.Token).ConfigureAwait(false);
+        }
+
+        private async Task<HttpResponseMessage> PostWithTimeoutAsync(string url, HttpContent content, CancellationToken cancellationToken)
+        {
+            using CancellationTokenSource timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(_requestTimeout);
+            return await _httpClient.PostAsync(url, content, timeoutCts.Token).ConfigureAwait(false);
         }
     }
 

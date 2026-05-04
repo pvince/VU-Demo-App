@@ -46,6 +46,46 @@ public sealed class ConfigurationManagerTests : IDisposable
         Assert.Equal("localhost", manager.GetServerHost());
         Assert.Equal(5340, manager.GetServerPort());
         Assert.Equal("cTpAWYuRpA2zx75Yh961Cg", manager.GetMasterKey());
+        Assert.Equal("Information", manager.GetLogLevel());
+        Assert.False(manager.IsDiagnosticsModeEnabled());
+    }
+
+    [Fact]
+    public void Constructor_UsesConfiguredLogSettings_WhenValuesAreValid()
+    {
+        File.WriteAllText(
+            Path.Combine(_configDirectory, "vu1demo_config.yaml"),
+            "master_key: abc\n" +
+            "dial_update_period: 0.5\n" +
+            "server_host: localhost\n" +
+            "server_port: 5340\n" +
+            "log_level: Warning\n" +
+            "diagnostics_mode: true\n" +
+            "dial_metrics: []\n");
+
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.Equal("Warning", manager.GetLogLevel());
+        Assert.True(manager.IsDiagnosticsModeEnabled());
+    }
+
+    [Fact]
+    public void Constructor_ResetsInvalidLogLevel_ToDefault()
+    {
+        File.WriteAllText(
+            Path.Combine(_configDirectory, "vu1demo_config.yaml"),
+            "master_key: abc\n" +
+            "dial_update_period: 0.5\n" +
+            "server_host: localhost\n" +
+            "server_port: 5340\n" +
+            "log_level: VeryLoud\n" +
+            "diagnostics_mode: false\n" +
+            "dial_metrics: []\n");
+
+        var manager = new ClassConfigurationManager(_configDirectory, showLoadFailureDialog: false);
+
+        Assert.Equal("Information", manager.GetLogLevel());
+        Assert.False(manager.IsDiagnosticsModeEnabled());
     }
 
     [Fact]

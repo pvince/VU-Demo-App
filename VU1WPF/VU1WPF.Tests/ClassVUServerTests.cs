@@ -129,6 +129,23 @@ public sealed class ClassVUServerTests
     }
 
     [Fact]
+    public async Task UpdateDialValueAsync_ReturnsFalse_OnRequestTimeout()
+    {
+        var handler = new CapturingHandler(async (_, cancellationToken) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+
+        using var client = new HttpClient(handler);
+        var server = new VU1_Server("localhost", 5340, "k", client, TimeSpan.FromMilliseconds(50));
+
+        bool ok = await server.UpdateDialValueAsync("dial-1", 50);
+
+        Assert.False(ok);
+    }
+
+    [Fact]
     public async Task UpdateDialBacklightAsync_ConvertsRgbBytesToPercent_WhenValuesAreNotPercentages()
     {
         var handler = new CapturingHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
@@ -162,6 +179,23 @@ public sealed class ClassVUServerTests
         Assert.Contains("red=100", request, StringComparison.Ordinal);
         Assert.Contains("green=0", request, StringComparison.Ordinal);
         Assert.Contains("blue=25", request, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UpdateDialBacklightAsync_ReturnsFalse_OnRequestTimeout()
+    {
+        var handler = new CapturingHandler(async (_, cancellationToken) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+
+        using var client = new HttpClient(handler);
+        var server = new VU1_Server("localhost", 5340, "k", client, TimeSpan.FromMilliseconds(50));
+
+        bool ok = await server.UpdateDialBacklightAsync("dial-1", 10, 10, 10, values_as_percent: true);
+
+        Assert.False(ok);
     }
 
     [Fact]
