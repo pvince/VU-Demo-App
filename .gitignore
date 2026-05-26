@@ -18,6 +18,7 @@ x64/
 [Oo]bj/
 .vs/
 artifacts/
+Artifacts/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
