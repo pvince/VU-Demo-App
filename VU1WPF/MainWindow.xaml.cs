@@ -174,9 +174,19 @@ namespace VU1WPF
                 SetMetricStatusForCurrentSensor(currentSensor);
                 brdSensorUnavailable.Visibility = Visibility.Collapsed;
                 txtUnavailableSensorMessage.Text = String.Empty;
+
+                string sensorTypeStr = currentSensor.SensorType.ToString();
+                cbDialMetricCategory.SelectedItem = sensorTypeStr;
+                // cbDialMetricCategory_SelectionChanged fires synchronously and repopulates cbDialMetric.ItemsSource
+                cbDialMetric.SelectedItem = cbDialMetric.Items
+                    .OfType<VU1_Sensor>()
+                    .FirstOrDefault(s => s.Sensor.Identifier.ToString() == currentSensor.Identifier.ToString());
             }
             else
             {
+                cbDialMetricCategory.SelectedItem = null;
+                cbDialMetric.SelectedItem = null;
+
                 if (gCurrentlySelectedDial.HasConfiguredSensorBinding)
                 {
                     lblCurrentMetric.Content = $"Unavailable - {gCurrentlySelectedDial.ConfiguredSensorIdentifier}";
